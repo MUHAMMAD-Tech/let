@@ -9,11 +9,11 @@
 
 .letai{
   position: absolute;
-  font-weight: 630;
+  font-weight: 640;
   font-family: monospace;
   color: #ffffff;
   top: 3.5px;
-  left: 38px;
+  left: 28px;
   
 }
 
@@ -897,4 +897,21 @@ body.light .switch-wrap p span:nth-child(1):before {
   bottom: 0;
   height: 600px;
   width: 360px;
+}
+
+
+.svg_logo{
+  position: absolute;
+  left: 10px;
+  top: 4px;
+}
+
+.curen_color{
+  color: white;
+}
+
+
+.dis{
+  height: 30px;
+  width: auto;
 }
