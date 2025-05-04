@@ -84,3 +84,29 @@
     //    });
   //  });
 //});
+
+
+ // elementlarni olish
+  const letai = document.querySelector('.letai');
+  const curenColor = document.querySelector('.curen_color');
+
+  let lastColorIsBlack = false;
+
+  setInterval(() => {
+    const letaiColor = getComputedStyle(letai).color;
+    const isBlack = letaiColor === 'rgb(31, 32, 41)';
+
+    if (isBlack && !lastColorIsBlack) {
+      curenColor.style.color = 'rgb(31, 32, 41)';
+      curenColor.style.transform = 'scale(1.1)';
+
+      setTimeout(() => {
+        curenColor.style.transform = 'scale(1)';
+      }, 200); // qisqa scale effekti
+    } else if (!isBlack) {
+      curenColor.style.color = '#fff';
+      curenColor.style.transform = 'scale(1)';
+    }
+
+    lastColorIsBlack = isBlack;
+  }, );
