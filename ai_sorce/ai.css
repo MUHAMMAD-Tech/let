@@ -41,6 +41,8 @@
     width: 100%;
     max-width: 300px;
     height: 55px;
+    background: white;
+    border-top: 1px solid #ccc;
 }
 
 .chat-footer input {
@@ -49,8 +51,6 @@
     border: none;
     border-radius: 20px;
     outline: none;
-    background: white;
-    border-top: 1px solid #ccc;
 }
 
 
