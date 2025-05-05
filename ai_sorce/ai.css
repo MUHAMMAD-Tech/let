@@ -53,6 +53,22 @@
     outline: none;
 }
 
+@media (min-width: 768px) {
+
+.chat-footer input {
+
+    max-width: 1400px: /*
+
+kompyuterlar uchun */
+
+.jonatish-tg {
+ 
+    position: absolute;
+    right: 10px;
+    bottom: 10px;  
+
+}
+
 .jonatish-tg{
     position: absolute;
     right: 5px;
