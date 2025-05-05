@@ -36,8 +36,6 @@
 .chat-footer {
     display: flex;
     padding: 10px;
-    background: white;
-    border-top: 1px solid #ccc;
     position: fixed;
     bottom: 0;
     width: 100%;
@@ -51,6 +49,8 @@
     border: none;
     border-radius: 20px;
     outline: none;
+    background: white;
+    border-top: 1px solid #ccc;
 }
 
 
