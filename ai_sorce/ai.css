@@ -53,21 +53,7 @@
     outline: none;
 }
 
-@media (min-width: 768px) {
 
-.chat-footer input {
-
-    max-width: 1400px:
-    border-raius: 25px;
- /*kompyuterlar uchun */
-
-#send-btn {
- 
-    position: absolute;
-    right: 10px;
-    bottom: 10px;  
-
-}
 
 #send-btn{
     position: absolute;
