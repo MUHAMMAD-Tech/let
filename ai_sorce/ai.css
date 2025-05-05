@@ -61,7 +61,7 @@
     border-raius: 25px;
  /*kompyuterlar uchun */
 
-.jonatish-tg {
+#send-btn {
  
     position: absolute;
     right: 10px;
@@ -69,7 +69,7 @@
 
 }
 
-.jonatish-tg{
+#send-btn{
     position: absolute;
     right: 5px;
     bottom: 9px;
