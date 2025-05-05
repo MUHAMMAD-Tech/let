@@ -55,7 +55,7 @@
 
 
 
-#send-btn{
+.jonatush_t {
     position: absolute;
     right: 5px;
     bottom: 9px;
@@ -67,8 +67,8 @@
     height: 40px;
     cursor: pointer;
     font-size: 20px;
+    z-index: 1;
 }
-
 
 .imput_1{
     height: 10px;
