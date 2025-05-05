@@ -53,9 +53,10 @@
     outline: none;
 }
 
-.chat-footer button {
+.jonatish-tg{
     position: absolute;
-    right: -30px;
+    right: 5px;
+    bottom: 9px;
     background: #007bff;
     color: white;
     border: none;
