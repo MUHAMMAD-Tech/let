@@ -124,10 +124,5 @@ textarea.addEventListener('input', function() {
 // textarea.value = 'Xush kelibsiz!';
 // textarea.dispatchEvent(new Event('input'));
 
-// Optional: clear and reset height after sending
-document.getElementById('send-btn').addEventListener('click', () => {
-  console.log('Yuborildi:', textarea.value);
-  textarea.value = '';
-  textarea.style.height = 'auto';
-});
+
 
