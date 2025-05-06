@@ -113,14 +113,17 @@ a:hover {
   position: relative;
   width: 100%;
   display: block;
+  z-index: 7;
 }
 
 .over-hide {
   overflow: hidden;
+  z-index: 7;
 }
 
 .full-height {
   height: 600px;
+  z-index: 7;
 }
 
 /* #Navigation
