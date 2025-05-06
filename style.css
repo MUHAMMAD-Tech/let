@@ -24,6 +24,8 @@
 
 .logo-h1:hover{
    transform: scale(1.1);
+   font-size: 17px;
+  font-weight: 300;
 }
 
 
