@@ -64,6 +64,14 @@
   height: auto;
 }
 
+.input_1::placeholder {
+
+line-height: 40px; /* yoki
+
+textarea balandligiga teng */
+
+}
+
 .jonatush_t {
   background: #007bff;
   color: white;
