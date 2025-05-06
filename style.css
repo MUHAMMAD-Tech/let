@@ -123,8 +123,10 @@ a:hover {
 }
 
 .full-height {
-  height: 600px;
+  height: 550px;
   z-index: 7;
+  position: absolute;
+  top: 71px;
 }
 
 /* #Navigation
