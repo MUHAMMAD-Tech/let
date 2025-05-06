@@ -94,6 +94,7 @@ textarea balandligiga teng */
 .jonatush_t svg {
   height: 30px;
   width: 30px;
+  color: #000
 }
 
 .jonatush_t:hover {
@@ -102,5 +103,15 @@ textarea balandligiga teng */
   transform: scale(1.1);
   color: #fff;
 }
+
+
+.jonatush_t svg:hover {
+  height: 30px;
+  width: 30px;
+  color: #fff
+}
+
+
+
 
 
