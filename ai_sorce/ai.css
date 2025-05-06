@@ -21,7 +21,8 @@
 
 
 .user-message {
-    background: #8167a9;
+    background: rgba(0, 0, 0, 0.6);;
+    border: 3px solid #8167a9;
     color: white;
     align-self: flex-end;
 }
@@ -76,7 +77,8 @@ textarea balandligiga teng */
 }
 
 .jonatush_t {
-  background: #8167a9;
+  background: #fff;
+  border: 2px solid #8167a9;
   color: white;
   border: none;
   border-radius: 50%;
