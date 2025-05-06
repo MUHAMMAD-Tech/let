@@ -148,20 +148,21 @@ document.getElementById("clear-chat-btn").addEventListener("click", function() {
 });
 
 // Doira menyuni ochish/yopish funksiyasi
-function toggleMenu() {
-  let menu = document.querySelector(".circle-menu");
-  
-  if (!menu.classList.contains("open")) {
-    menu.style.visibility = "visible";
-    menu.classList.add("open");
-    menu.classList.remove("closing");
-  } else {
-    menu.classList.add("closing");
-    
-    setTimeout(() => {
-      menu.classList.remove("open");
-      menu.classList.remove("closing");
-      menu.style.visibility = "hidden";
-    }, 500);
-  }
-}
+const textarea = document.getElementById('user-input');
+
+// Auto height for textarea
+textarea.addEventListener('input', function() {
+  this.style.height = 'auto'; // reset height
+  this.style.height = this.scrollHeight + 'px'; // set new height based on content
+});
+
+// (Optional) Initial content set example
+// textarea.value = 'Xush kelibsiz!';
+// textarea.dispatchEvent(new Event('input'));
+
+// Optional: clear and reset height after sending
+document.getElementById('send-btn1').addEventListener('click', () => {
+  console.log('Yuborildi:', textarea.value);
+  textarea.value = '';
+  textarea.style.height = 'auto';
+});
