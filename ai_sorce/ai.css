@@ -33,47 +33,53 @@
    text-align: center;
 }
 
-.chat-footer {
-    display: flex;
-    padding: 10px;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    height: 55px;
-    background: white;
-    border-top: 1px solid #ccc
-    border-radius: 20px;
+  .chat-footer {
+  display: flex;
+  padding: 10px;
+  background: white;
+  border-top: 1px solid #ccc;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  border-radius: 20px;
+  left: 0;
+  align-items: flex-end;
+  gap: 10px;
+  box-sizing: border-box;
 }
 
-
+.input_1 {
+  border: none;
+  outline: none;
+  flex: 1;
+  min-height: 30px;
+  max-height: 300px;
+  line-height: 20px;
+  border-radius: 8px;
+  resize: none;
+  overflow-y: hidden; /* Fix: scroll ko‘rinmasin */
+  font-size: 16px;
+  font-family: inherit;
+  box-sizing: border-box;
+  height: auto;
+}
 
 .jonatush_t {
-    position: absolute;
-    right: 5px;
-    bottom: 9px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    font-size: 20px;
-    z-index: 1;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.input_1{
-    height: 30px;
-    width: 200px;
-    min-height: 30px;
-   resize: vertical; 
-   /*oʻzgartira oladi */
-   white-space: normal;
-   overflow-wrap: break-word;
-   flex: 1;
-    padding: 10px;
-    border: none;
-    outline: none;
+.jonatush_t svg {
+  height: 30px;
+  width: 30px;
 }
-
 
