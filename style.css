@@ -222,7 +222,7 @@ a:hover {
 
 .nav {
   position: fixed;
-  z-index: 98;
+  z-index: 1000;
 }
 
 .nav:before,
