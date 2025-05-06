@@ -1,4 +1,6 @@
 .chat-body {
+    position: absolute;
+    bottom: 0;
     flex: 1;
     padding: 10px;
     overflow-y: auto;
