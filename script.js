@@ -110,3 +110,22 @@
 
     lastColorIsBlack = isBlack;
   }, );
+
+const textarea = document.getElementById('user-input');
+
+// Auto height for textarea
+textarea.addEventListener('input', function() {
+  this.style.height = 'auto'; // reset height
+  this.style.height = this.scrollHeight + 'px'; // set new height based on content
+});
+
+// (Optional) Initial content set example
+// textarea.value = 'Xush kelibsiz!';
+// textarea.dispatchEvent(new Event('input'));
+
+// Optional: clear and reset height after sending
+document.getElementById('send-btn1').addEventListener('click', () => {
+  console.log('Yuborildi:', textarea.value);
+  textarea.value = '';
+  textarea.style.height = 'auto';
+});
