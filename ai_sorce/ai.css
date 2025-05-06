@@ -95,3 +95,9 @@ textarea balandligiga teng */
   width: 30px;
 }
 
+.jonatush_t:hover {
+  background: #fff;
+  border: 2px solid #000000;
+  transform: scale(1.1);
+}
+
