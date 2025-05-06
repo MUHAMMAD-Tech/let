@@ -33,7 +33,7 @@ body {
 
 .ban{
    position: absolute;
-   z-index: 0;
+   z-index: 8;
    height: 85px;
    background-color: #1f2029;
 }
