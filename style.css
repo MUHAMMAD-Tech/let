@@ -18,6 +18,15 @@
 }
 
 
+.logo-h1{
+   transition: transform 0.3s ease
+}
+
+.logo-h1:hover{
+   transform: scale(1.1);
+}
+
+
 body {
   font-family: 'Montserrat', sans-serif;
   font-weight: 300;
