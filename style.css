@@ -31,6 +31,13 @@ body {
 }
 
 
+.ban{
+   z-index: 99;
+   height: 85px;
+   background-color: #1f2029;
+}
+
+
 a {
   cursor: pointer;
 }
