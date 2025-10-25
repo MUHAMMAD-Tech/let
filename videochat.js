@@ -1,4 +1,4 @@
-const SIGNALING_SERVER = "https://signaling.letai.bet"; // o'zingizning Node.js server URL
+const SIGNALING_SERVER = "https://let-nuog.onrender.com"; // o'zingizning Node.js server URL
 
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
