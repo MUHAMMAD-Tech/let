@@ -44,7 +44,29 @@
             <h1>
             <div id="switch" class="hover-target">
                 <div id="circle">
-                  
+                   <h2>2 kishilik Video Chat</h2>
+
+  <div id="videos">
+    <video id="localVideo" autoplay playsinline muted></video>
+    <video id="remoteVideo" autoplay playsinline></video>
+  </div>
+
+  <div id="controls">
+    <input id="roomInput" placeholder="Xona nomi" />
+    <button id="joinBtn">Kirish/Yaratish</button>
+    <button id="leaveBtn" disabled>Chiqish</button>
+  </div>
+
+  <div id="chatBox">
+    <div id="messages"></div>
+    <div id="chatControls">
+      <input id="chatInput" placeholder="Xabar yozing..." />
+      <button id="sendBtn">Yuborish</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
+  <script src="js/videochat.js"></script>
                 </div>
             </div>
         </div>
