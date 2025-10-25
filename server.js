@@ -6,7 +6,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["https://your-vercel-domain.vercel.app"],
+    origin: ["https://web-iqy7xiem0-muhammad-techs-projects.vercel.app"],
     methods: ["GET", "POST"]
   }
 });
