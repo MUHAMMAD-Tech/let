@@ -1,4 +1,6 @@
-
+.hdw{
+    color="#000"
+}
 #videos { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
 video { width:48%; max-width:560px; border-radius:8px; background:#000; }
 #chatBox { border:1px solid #ddd; padding:8px; max-width:680px; }
