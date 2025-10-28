@@ -1,5 +1,5 @@
 // =======================
-// LETAI FRONT CORE JS
+// LETAI FRONT CORE JS + WalletConnect V2
 // =======================
 (function ($) {
   "use strict";
@@ -52,9 +52,9 @@
 })(jQuery);
 
 // =======================
-// DEX (SWAP) SECTION
+// DEX (SWAP) SECTION with WalletConnect V2
 // =======================
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
   const connectBtn = document.getElementById('connectWalletBtn');
   const walletAddrEl = document.getElementById('walletAddress');
   const fromSelect = document.getElementById('fromTokenSelect');
@@ -63,25 +63,31 @@ document.addEventListener('DOMContentLoaded', function () {
   const swapBtn = document.getElementById('swapBtn');
   const statusEl = document.getElementById('swapStatus');
 
-  if (!connectBtn) return; // If DEX section not on this page, skip
+  if (!connectBtn) return;
 
-  const setStatus = (txt) => statusEl.innerText = txt;
+  const setStatus = txt => { statusEl.innerText = txt; console.log('[DEX STATUS]', txt); };
 
   let web3Modal, provider, selectedAccount;
 
-  async function initWallet() {
-    const providerOptions = {
-      walletconnect: {
-        package: window.WalletConnectProvider?.default || window.WalletConnectProvider,
-        options: {
-          rpc: { 1: "https://rpc.ankr.com/eth", 56: "https://bsc-dataseed.binance.org/" }
-        }
+  // --- WalletConnect V2 Provider Options ---
+  const providerOptions = {
+    walletconnect: {
+      package: window.WalletConnectEthereumProvider,
+      options: {
+        projectId: "f76f0bcabf40fadb066240a1c96eff76", // sizning Project ID
+        chains: [1, 56], // Ethereum & BSC
+        showQrModal: true
       }
-    };
+    }
+  };
 
-    web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
-  }
+  // Init Web3Modal
+  web3Modal = new window.Web3Modal.default({
+    cacheProvider: false,
+    providerOptions
+  });
 
+  // Connect Wallet
   async function connectWallet() {
     try {
       setStatus('Connecting wallet...');
@@ -89,64 +95,70 @@ document.addEventListener('DOMContentLoaded', function () {
       const ethersProvider = new ethers.providers.Web3Provider(provider);
       const accounts = await ethersProvider.listAccounts();
       selectedAccount = accounts[0];
+      if (!selectedAccount) return setStatus('No accounts found');
       walletAddrEl.innerText = `Connected: ${selectedAccount.substring(0,6)}...${selectedAccount.slice(-4)}`;
       window.userAccount = selectedAccount;
       setStatus('Wallet connected');
     } catch (err) {
-      console.error(err);
-      setStatus('Wallet connection failed');
+      console.error('Wallet connect failed', err);
+      setStatus('Connection failed');
     }
   }
 
   connectBtn.addEventListener('click', connectWallet);
-  initWallet();
 
+  // --- Fetch Tokens ---
   async function fetchTokens() {
     try {
       setStatus('Loading tokens...');
       const res = await fetch("https://api.1inch.io/v5.0/1/tokens");
       const data = await res.json();
-      const tokens = Object.values(data.tokens).slice(0, 200);
+      const tokens = Object.values(data.tokens || {}).slice(0, 200);
       [fromSelect, toSelect].forEach(sel => {
         sel.innerHTML = '<option value="">Select token</option>';
         tokens.forEach(t => {
           const opt = document.createElement('option');
           opt.value = JSON.stringify(t);
-          opt.text = `${t.symbol}`;
+          opt.text = `${t.symbol} — ${t.name}`;
           sel.appendChild(opt);
         });
       });
       setStatus('Tokens loaded');
-    } catch {
-      setStatus('Token load failed');
+    } catch (err) {
+      console.error('Token load failed', err);
+      setStatus('Failed to load tokens');
     }
   }
 
   fetchTokens();
 
+  // --- Swap Function ---
   swapBtn.addEventListener('click', async () => {
     try {
       const fromToken = JSON.parse(fromSelect.value);
       const toToken = JSON.parse(toSelect.value);
       const amount = amountInput.value;
-      if (!fromToken || !toToken || !amount) return alert('Fill all fields');
       const userAccount = window.userAccount;
+      if (!fromToken || !toToken || !amount) return alert('Please fill all fields');
       if (!userAccount) return alert('Connect wallet first');
 
+      setStatus('Preparing swap...');
       const ethersProvider = new ethers.providers.Web3Provider(provider);
       const signer = ethersProvider.getSigner();
       const amountInWei = ethers.utils.parseUnits(amount, fromToken.decimals).toString();
 
       const url = `https://api.1inch.io/v5.0/1/swap?fromTokenAddress=${fromToken.address}&toTokenAddress=${toToken.address}&amount=${amountInWei}&fromAddress=${userAccount}&slippage=1`;
-      setStatus('Preparing swap...');
-      const res = await fetch(url);
-      const data = await res.json();
-      const tx = await signer.sendTransaction(data.tx);
-      await tx.wait();
-      setStatus('✅ Swap complete!');
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (!data.tx) throw new Error('No transaction returned');
+      setStatus('Confirm transaction in wallet...');
+      const txResponse = await signer.sendTransaction(data.tx);
+      await txResponse.wait();
+      setStatus('✅ Swap completed');
+      alert('Swap successful!');
     } catch (err) {
       console.error('Swap failed', err);
-      setStatus('❌ Swap failed');
+      setStatus('❌ Swap failed — check console');
     }
   });
 });
