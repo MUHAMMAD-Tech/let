@@ -3,19 +3,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const body = document.body;
   const switchEl = document.getElementById("switch");
-  const svgEl = document.querySelector(".curen_color");
-  const swapSection = document.querySelector(".swap-section");
+  const svgEl = document.querySelector(".swap-section .curen_color"); // faqat swap section ichidagi SVG
 
   // --- Theme Update Function ---
   function updateThemeColors() {
-    if (!svgEl || !swapSection) return;
+    if (!svgEl) return;
 
     if (body.classList.contains("light")) {
-      svgEl.style.color = "#000";        // SVG qora
-      swapSection.style.color = "#000";  // form text qora
+      svgEl.style.color = "#000"; // light theme → qora SVG
     } else {
-      svgEl.style.color = "#fff";        // SVG oq
-      swapSection.style.color = "#fff";  // form text oq
+      svgEl.style.color = "#fff"; // dark theme → oq SVG
     }
   }
 
@@ -32,8 +29,14 @@ document.addEventListener("DOMContentLoaded", function () {
       body.classList.toggle("light");
       switchEl.classList.toggle("switched");
       localStorage.setItem("theme", body.classList.contains("light") ? "light" : "dark");
-      updateThemeColors(); // SVG va form rangini yangilash
+      updateThemeColors(); // faqat swap section ichidagi SVG rangini yangilash
     });
+  }
+
+  // --- Navigation ---
+  const menu = document.querySelector(".menu-icon");
+  if (menu) {
+    menu.addEventListener("click", () => body.classList.toggle("nav-active"));
   }
 
   // --- Cursor Animation ---
@@ -56,11 +59,5 @@ document.addEventListener("DOMContentLoaded", function () {
       el.addEventListener("mouseover", hoverOn);
       el.addEventListener("mouseout", hoverOff);
     });
-  }
-
-  // --- Navigation ---
-  const menu = document.querySelector(".menu-icon");
-  if (menu) {
-    menu.addEventListener("click", () => body.classList.toggle("nav-active"));
   }
 });
