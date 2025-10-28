@@ -19,33 +19,6 @@
 <link rel="stylesheet" href="swap.css">
 </head>
 <body>
-
- <section class="section full-height over-hide swapc swap-section">
-        <div class="container text-center ">
-            <h2 class="mb-4">Swap Tokens</h2>
-            <div class="swap-box">
-                <div class="form-group">
-                    <label for="fromTokenSelect">From Token</label>
-                    <select id="fromTokenSelect" class="form-control"></select>
-                </div>
-                <div class="form-group">
-                    <label for="toTokenSelect">To Token</label>
-                    <select id="toTokenSelect" class="form-control"></select>
-                </div>
-                <div class="form-group">
-                    <label for="swapAmount">Amount</label>
-                    <input type="number" id="swapAmount" class="form-control" placeholder="Enter amount">
-                </div>
-                <button id="connectWalletBtn" class="btn btn-primary mt-2">Connect Wallet</button>
-                <div id="walletAddress" class="mt-2 mb-2"></div>
-                <button id="swapBtn" class="btn btn-success">Swap</button>
-                <div id="swapStatus" class="mt-2"></div>
-            </div>
-        </div>
-    </section>
-
-
-
     <header class="cd-header">
         <div class="header-wrapper">
             <div class="logo-wrap">
@@ -87,7 +60,31 @@
         </div>
         </div>
     </div>
-       
+
+        <section class="section full-height over-hide swapc swap-section">
+        <div class="container text-center ">
+            <h2 class="mb-4">Swap Tokens</h2>
+            <div class="swap-box">
+                <div class="form-group">
+                    <label for="fromTokenSelect">From Token</label>
+                    <select id="fromTokenSelect" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label for="toTokenSelect">To Token</label>
+                    <select id="toTokenSelect" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label for="swapAmount">Amount</label>
+                    <input type="number" id="swapAmount" class="form-control" placeholder="Enter amount">
+                </div>
+                <button id="connectWalletBtn" class="btn btn-primary mt-2">Connect Wallet</button>
+                <div id="walletAddress" class="mt-2 mb-2"></div>
+                <button id="swapBtn" class="btn btn-success">Swap</button>
+                <div id="swapStatus" class="mt-2"></div>
+            </div>
+        </div>
+    </section>
+
     <!-- Cursors -->
     <div class='cursor' id="cursor"></div>
     <div class='cursor2' id="cursor2"></div>
