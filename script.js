@@ -138,4 +138,62 @@ document.getElementById('connectWalletBtn').addEventListener('click', async () =
 
 
 
+// Fetch top 200 tokens from 1inch
+async function fetchTokens() {
+  try {
+    const response = await fetch("https://api.1inch.io/v5.0/1/tokens");
+    const data = await response.json();
+    const tokens = Object.values(data.tokens).slice(0, 200);
+
+    const fromSelect = document.getElementById('fromTokenSelect');
+    const toSelect = document.getElementById('toTokenSelect');
+
+    tokens.forEach(token => {
+      const optionFrom = document.createElement('option');
+      optionFrom.value = JSON.stringify(token);
+      optionFrom.text = token.symbol;
+      fromSelect.appendChild(optionFrom);
+
+      const optionTo = document.createElement('option');
+      optionTo.value = JSON.stringify(token);
+      optionTo.text = token.symbol;
+      toSelect.appendChild(optionTo);
+    });
+  } catch (err) {
+    console.error("Token fetch error:", err);
+  }
+}
+
+fetchTokens();
+
+// Swap function
+document.getElementById('swapBtn').addEventListener('click', async () => {
+  const fromToken = JSON.parse(document.getElementById('fromTokenSelect').value);
+  const toToken = JSON.parse(document.getElementById('toTokenSelect').value);
+  const amount = document.getElementById('swapAmount').value;
+  const userAccount = window.userAccount;
+
+  if (!fromToken || !toToken || !amount || !userAccount) {
+    alert("Please fill all fields and connect wallet");
+    return;
+  }
+
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+
+  const url = `https://api.1inch.io/v5.0/1/swap?fromTokenAddress=${fromToken.address}&toTokenAddress=${toToken.address}&amount=${ethers.utils.parseUnits(amount, fromToken.decimals).toString()}&fromAddress=${userAccount}&slippage=1`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    const tx = await signer.sendTransaction(data.tx);
+    await tx.wait();
+    alert("Swap completed!");
+  } catch (err) {
+    console.error("Swap error:", err);
+    alert("Swap failed. See console for details.");
+  }
+});
+
+
 
