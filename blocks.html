@@ -52,53 +52,39 @@
         </div>
     </div>
 
-    <div class="section full-height over-hide">
+        <section class="section full-height over-hide swap-section">
+        <div class="container text-center">
+            <h2 class="mb-4">Swap Tokens</h2>
+            <div class="swap-box">
+                <div class="form-group">
+                    <label for="fromTokenSelect">From Token</label>
+                    <select id="fromTokenSelect" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label for="toTokenSelect">To Token</label>
+                    <select id="toTokenSelect" class="form-control"></select>
+                </div>
+                <div class="form-group">
+                    <label for="swapAmount">Amount</label>
+                    <input type="number" id="swapAmount" class="form-control" placeholder="Enter amount">
+                </div>
+                <button id="connectWalletBtn" class="btn btn-primary mt-2">Connect Wallet</button>
+                <div id="walletAddress" class="mt-2 mb-2"></div>
+                <button id="swapBtn" class="btn btn-success">Swap</button>
+                <div id="swapStatus" class="mt-2"></div>
+            </div>
+        </div>
+    </section>
 
-
- <div class="swapc">
-
-  <!-- 🌐 DEX SWAP SECTION -->
-  <section id="dexContainer" aria-label="DEX Swap section">
-    <h2>💱 Letai DEX Swap</h2>
-
-    <button id="connectWalletBtn" type="button">Connect Wallet</button>
-    <div id="walletAddress"></div>
-
-    <label for="fromTokenSelect">From Token</label>
-    <select id="fromTokenSelect">
-      <option value="">Loading tokens...</option>
-    </select>
-
-    <label for="toTokenSelect">To Token</label>
-    <select id="toTokenSelect">
-      <option value="">Loading tokens...</option>
-    </select>
-
-    <label for="swapAmount">Amount</label>
-    <input id="swapAmount" type="number" placeholder="0.0" min="0" step="any" />
-
-    <button id="swapBtn" type="button">🔁 Swap Now</button>
-    <p id="swapStatus">Ready</p>
-  </section>
-
-  <!-- Kutubxonalar -->
-  <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
-  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
-
-
-</div>
-
-
-    </div>
+    <!-- Cursors -->
     <div class='cursor' id="cursor"></div>
     <div class='cursor2' id="cursor2"></div>
     <div class='cursor3' id="cursor3"></div>
 
-    <!-- Link to page
-================================================== -->
-
-
+    <!-- Scripts -->
+    <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.11.2/dist/index.min.js"></script>
+    <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
