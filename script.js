@@ -1,51 +1,40 @@
 document.addEventListener("DOMContentLoaded", function () {
-  "use strict";
-
   const body = document.body;
   const switchEl = document.getElementById("switch");
-  const svgElements = document.querySelectorAll(".curen_color"); // barcha SVG lar
-  const swapSection = document.querySelector(".swap-section"); // swap section
+  const svgElements = document.querySelectorAll(".curen_color");
+  const swapSection = document.querySelector(".swap-section");
+  const menu = document.querySelector(".menu-icon");
 
-  // --- Theme Update Function ---
+  // --- Update Theme Colors ---
   function updateThemeColors() {
-    // SVG rangini yangilash
+    // SVG
     svgElements.forEach(svg => {
-      if (body.classList.contains("light")) {
-        svg.style.color = "#000"; // light → qora
-      } else {
-        svg.style.color = "#fff"; // dark → oq
-      }
+      svg.style.color = body.classList.contains("light") ? "#000" : "#fff";
     });
-
-    // Swap section matnlarini yangilash
+    // Swap section
     if (swapSection) {
-      if (body.classList.contains("light")) {
-        swapSection.style.color = "#000"; // light → qora
-      } else {
-        swapSection.style.color = "#fff"; // dark → oq
-      }
+      swapSection.style.color = body.classList.contains("light") ? "#000" : "#fff";
     }
   }
 
-  // --- Sahifa yuklanganda theme ---
+  // --- Load theme from localStorage ---
   if (localStorage.getItem("theme") === "light") {
     body.classList.add("light");
     if (switchEl) switchEl.classList.add("switched");
   }
   updateThemeColors();
 
-  // --- Theme switch ---
+  // --- Theme toggle ---
   if (switchEl) {
     switchEl.addEventListener("click", () => {
       body.classList.toggle("light");
       switchEl.classList.toggle("switched");
       localStorage.setItem("theme", body.classList.contains("light") ? "light" : "dark");
-      updateThemeColors(); // ranglarni yangilash
+      updateThemeColors();
     });
   }
 
   // --- Navigation menu toggle ---
-  const menu = document.querySelector(".menu-icon");
   if (menu) {
     menu.addEventListener("click", () => body.classList.toggle("nav-active"));
   }
