@@ -116,4 +116,26 @@
 
 
 
+//  DEX
+
+
+
+document.getElementById('connectWalletBtn').addEventListener('click', async () => {
+  if (window.ethereum) {
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const account = accounts[0];
+      document.getElementById('walletAddress').innerText = `Connected: ${account.substring(0,6)}...${account.slice(-4)}`;
+      window.userAccount = account; // global account
+      console.log("Wallet connected:", account);
+    } catch (err) {
+      console.error("Connection error:", err);
+    }
+  } else {
+    alert("Please install MetaMask!");
+  }
+});
+
+
+
 
