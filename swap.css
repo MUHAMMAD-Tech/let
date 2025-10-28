@@ -8,7 +8,7 @@
   --radius: 14px;
 }
 
-body {
+.swapc {
   margin: 0;
   min-height: 100vh;
   background: var(--bg-main);
