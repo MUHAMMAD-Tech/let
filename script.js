@@ -1,8 +1,40 @@
-// =======================
-// UI & Theme JS
-// =======================
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   "use strict";
+
+  const body = document.body;
+  const switchEl = document.getElementById("switch");
+  const svgEl = document.querySelector(".curen_color");
+  const swapSection = document.querySelector(".swap-section");
+
+  // --- Theme Update Function ---
+  function updateThemeColors() {
+    if (!svgEl || !swapSection) return;
+
+    if (body.classList.contains("light")) {
+      svgEl.style.color = "#000";        // SVG qora
+      swapSection.style.color = "#000";  // form text qora
+    } else {
+      svgEl.style.color = "#fff";        // SVG oq
+      swapSection.style.color = "#fff";  // form text oq
+    }
+  }
+
+  // --- Sahifa yuklanganda theme ---
+  if (localStorage.getItem("theme") === "light") {
+    body.classList.add("light");
+    if (switchEl) switchEl.classList.add("switched");
+  }
+  updateThemeColors();
+
+  // --- Switch Event ---
+  if (switchEl) {
+    switchEl.addEventListener("click", () => {
+      body.classList.toggle("light");
+      switchEl.classList.toggle("switched");
+      localStorage.setItem("theme", body.classList.contains("light") ? "light" : "dark");
+      updateThemeColors(); // SVG va form rangini yangilash
+    });
+  }
 
   // --- Cursor Animation ---
   const t = document.getElementById("cursor"),
@@ -26,41 +58,9 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // --- Navigation (Burger Menu) ---
-  const body = document.body;
+  // --- Navigation ---
   const menu = document.querySelector(".menu-icon");
   if (menu) {
     menu.addEventListener("click", () => body.classList.toggle("nav-active"));
-  }
-
-  // --- Light / Dark Switch + SVG theme ---
-  const switchEl = document.getElementById("switch");
-  const svgEl = document.querySelector(".curen_color");
-  const swapSection = document.querySelector(".swap-section");
-
-  function updateThemeColors() {
-    if (!svgEl || !swapSection) return;
-    if (body.classList.contains("light")) {
-      svgEl.style.color = "#000";      // SVG qora
-      swapSection.style.color = "#000"; // form text qora
-    } else {
-      svgEl.style.color = "#fff";      // SVG oq
-      swapSection.style.color = "#fff"; // form text oq
-    }
-  }
-
-  if (localStorage.getItem("theme") === "light") {
-    body.classList.add("light");
-    if (switchEl) switchEl.classList.add("switched");
-  }
-  updateThemeColors();
-
-  if (switchEl) {
-    switchEl.addEventListener("click", () => {
-      body.classList.toggle("light");
-      switchEl.classList.toggle("switched");
-      localStorage.setItem("theme", body.classList.contains("light") ? "light" : "dark");
-      updateThemeColors();
-    });
   }
 });
