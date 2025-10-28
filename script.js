@@ -120,80 +120,185 @@
 
 
 
-document.getElementById('connectWalletBtn').addEventListener('click', async () => {
-  if (window.ethereum) {
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const account = accounts[0];
-      document.getElementById('walletAddress').innerText = `Connected: ${account.substring(0,6)}...${account.slice(-4)}`;
-      window.userAccount = account; // global account
-      console.log("Wallet connected:", account);
-    } catch (err) {
-      console.error("Connection error:", err);
-    }
-  } else {
-    alert("Please install MetaMask!");
-  }
-});
+// script.js (to'liq xavfsiz versiya)
 
+document.addEventListener('DOMContentLoaded', function () {
+  // Elementlar
+  const connectBtn = document.getElementById('connectWalletBtn');
+  const walletAddrEl = document.getElementById('walletAddress');
+  const fromSelect = document.getElementById('fromTokenSelect');
+  const toSelect = document.getElementById('toTokenSelect');
+  const amountInput = document.getElementById('swapAmount');
+  const swapBtn = document.getElementById('swapBtn');
+  const statusEl = document.getElementById('swapStatus');
 
-
-// Fetch top 200 tokens from 1inch
-async function fetchTokens() {
-  try {
-    const response = await fetch("https://api.1inch.io/v5.0/1/tokens");
-    const data = await response.json();
-    const tokens = Object.values(data.tokens).slice(0, 200);
-
-    const fromSelect = document.getElementById('fromTokenSelect');
-    const toSelect = document.getElementById('toTokenSelect');
-
-    tokens.forEach(token => {
-      const optionFrom = document.createElement('option');
-      optionFrom.value = JSON.stringify(token);
-      optionFrom.text = token.symbol;
-      fromSelect.appendChild(optionFrom);
-
-      const optionTo = document.createElement('option');
-      optionTo.value = JSON.stringify(token);
-      optionTo.text = token.symbol;
-      toSelect.appendChild(optionTo);
-    });
-  } catch (err) {
-    console.error("Token fetch error:", err);
-  }
-}
-
-fetchTokens();
-
-// Swap function
-document.getElementById('swapBtn').addEventListener('click', async () => {
-  const fromToken = JSON.parse(document.getElementById('fromTokenSelect').value);
-  const toToken = JSON.parse(document.getElementById('toTokenSelect').value);
-  const amount = document.getElementById('swapAmount').value;
-  const userAccount = window.userAccount;
-
-  if (!fromToken || !toToken || !amount || !userAccount) {
-    alert("Please fill all fields and connect wallet");
+  // Quick guards
+  if (!connectBtn || !walletAddrEl || !fromSelect || !toSelect || !amountInput || !swapBtn || !statusEl) {
+    console.error('DEX elements missing in DOM. Check IDs in index.html and script.js');
     return;
   }
 
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner();
+  // Status helper
+  const setStatus = (txt) => {
+    statusEl.innerText = txt;
+    console.log('[DEX STATUS]', txt);
+  };
 
-  const url = `https://api.1inch.io/v5.0/1/swap?fromTokenAddress=${fromToken.address}&toTokenAddress=${toToken.address}&amount=${ethers.utils.parseUnits(amount, fromToken.decimals).toString()}&fromAddress=${userAccount}&slippage=1`;
+  // ====== Wallet modal init ======
+  let web3Modal;
+  let provider;
+  let selectedAccount;
 
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    const tx = await signer.sendTransaction(data.tx);
-    await tx.wait();
-    alert("Swap completed!");
-  } catch (err) {
-    console.error("Swap error:", err);
-    alert("Swap failed. See console for details.");
+  async function initWallet() {
+    const providerOptions = {
+      walletconnect: {
+        package: window.WalletConnectProvider?.default || window.WalletConnectProvider,
+        options: {
+          rpc: {
+            1: "https://rpc.ankr.com/eth",
+            56: "https://bsc-dataseed.binance.org/"
+          }
+        }
+      }
+    };
+
+    web3Modal = new window.Web3Modal?.default?.({
+      cacheProvider: false,
+      providerOptions
+    });
+
+    if (!web3Modal) {
+      console.warn('Web3Modal not available. WalletConnect / Web3Modal failed to load.');
+    }
   }
+
+  initWallet();
+
+  async function connectWallet() {
+    try {
+      setStatus('Connecting wallet...');
+      provider = await web3Modal.connect();
+      const ethersProvider = new ethers.providers.Web3Provider(provider);
+      const accounts = await ethersProvider.listAccounts();
+      selectedAccount = accounts && accounts[0];
+
+      if (!selectedAccount) {
+        setStatus('No accounts found. Please unlock your wallet.');
+        return;
+      }
+
+      walletAddrEl.innerText = `Connected: ${selectedAccount.substring(0,6)}...${selectedAccount.slice(-4)}`;
+      window.userAccount = selectedAccount;
+      setStatus('Wallet connected');
+    } catch (err) {
+      console.error('connectWallet error:', err);
+      setStatus('Wallet connection failed');
+      alert('Wallet connection failed. See console for details.');
+    }
+  }
+
+  connectBtn.addEventListener('click', connectWallet);
+
+  // ====== Tokens fetch ======
+  async function fetchTokens() {
+    try {
+      setStatus('Loading token list...');
+      const res = await fetch("https://api.1inch.io/v5.0/1/tokens");
+      if (!res.ok) throw new Error('Tokens API error: ' + res.status);
+      const data = await res.json();
+      const tokens = Object.values(data.tokens || {}).slice(0, 200);
+
+      // Clear selects
+      fromSelect.innerHTML = '';
+      toSelect.innerHTML = '';
+
+      const placeholder1 = document.createElement('option');
+      placeholder1.value = '';
+      placeholder1.text = 'Select token';
+      fromSelect.appendChild(placeholder1);
+
+      const placeholder2 = document.createElement('option');
+      placeholder2.value = '';
+      placeholder2.text = 'Select token';
+      toSelect.appendChild(placeholder2);
+
+      tokens.forEach(t => {
+        const opt1 = document.createElement('option');
+        opt1.value = JSON.stringify(t);
+        opt1.text = `${t.symbol} — ${t.name}`;
+        fromSelect.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = JSON.stringify(t);
+        opt2.text = `${t.symbol} — ${t.name}`;
+        toSelect.appendChild(opt2);
+      });
+
+      setStatus('Tokens loaded');
+    } catch (err) {
+      console.error('fetchTokens error:', err);
+      setStatus('Failed to load tokens');
+      fromSelect.innerHTML = '<option value="">Token load error</option>';
+      toSelect.innerHTML = '<option value="">Token load error</option>';
+    }
+  }
+
+  fetchTokens();
+
+  // ====== Swap ======
+  swapBtn.addEventListener('click', async () => {
+    try {
+      const fromVal = fromSelect.value;
+      const toVal = toSelect.value;
+      const amount = amountInput.value;
+      const userAccount = window.userAccount || selectedAccount;
+
+      if (!fromVal || !toVal) { alert('Please choose both tokens'); return; }
+      if (!amount || Number(amount) <= 0) { alert('Enter valid amount'); return; }
+      if (!userAccount) { alert('Connect wallet first'); return; }
+
+      const fromToken = JSON.parse(fromVal);
+      const toToken = JSON.parse(toVal);
+
+      setStatus('Preparing swap...');
+
+      const ethersProvider = new ethers.providers.Web3Provider(provider);
+      const signer = ethersProvider.getSigner();
+
+      // convert amount to token decimals
+      const amountInWei = ethers.utils.parseUnits(String(amount), fromToken.decimals).toString();
+
+      const url = `https://api.1inch.io/v5.0/1/swap?fromTokenAddress=${fromToken.address}&toTokenAddress=${toToken.address}&amount=${amountInWei}&fromAddress=${userAccount}&slippage=1`;
+      setStatus('Requesting swap quote...');
+
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('1inch swap API error: ' + resp.status);
+      const data = await resp.json();
+
+      if (!data.tx) {
+        console.error('1inch response:', data);
+        throw new Error('Swap API did not return transaction. See console.');
+      }
+
+      setStatus('Waiting for user to confirm transaction in wallet...');
+      const txResponse = await signer.sendTransaction(data.tx);
+      setStatus('Transaction sent. Waiting for confirmation...');
+      await txResponse.wait();
+
+      setStatus('✅ Swap completed');
+      alert('Swap completed successfully');
+    } catch (err) {
+      console.error('Swap failed:', err);
+      setStatus('Swap failed — see console');
+      alert('Swap failed. Open console for details.');
+    }
+  });
+
+  // Optional: auto reconnect if provider cached
+  // window.addEventListener("beforeunload", () => { if(provider?.disconnect) provider.disconnect(); });
 });
+  
+  
 
 
 
