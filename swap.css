@@ -1,0 +1,124 @@
+:root {
+  --bg-main: radial-gradient(circle at top, #0a0a10 0%, #000 100%);
+  --card-bg: rgba(20, 20, 25, 0.95);
+  --accent1: rgb(129, 103, 169);
+  --accent2: rgb(166, 140, 205);
+  --text-light: #f1f3f5;
+  --text-muted: #9aa0a6;
+  --radius: 14px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg-main);
+  font-family: 'Inter', sans-serif;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+#dexContainer {
+  width: 100%;
+  max-width: 460px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 25px;
+  box-shadow: 0 0 20px rgba(129, 103, 169, 0.25), 0 0 8px rgba(129, 103, 169, 0.15);
+  position: relative;
+  overflow: visible;
+}
+
+#dexContainer h2 {
+  text-align: center;
+  color: var(--accent1);
+  font-size: 1.7rem;
+  margin: 0 0 18px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+#dexContainer label {
+  display: block;
+  margin: 10px 0 6px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+#dexContainer select,
+#dexContainer input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #16161b;
+  color: var(--text-light);
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  transition: box-shadow 0.2s ease;
+}
+
+#dexContainer select:focus,
+#dexContainer input:focus {
+  outline: none;
+  box-shadow: 0 0 8px var(--accent1);
+}
+
+#connectWalletBtn,
+#swapBtn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(90deg, var(--accent1), var(--accent2));
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s;
+}
+
+#connectWalletBtn {
+  margin-bottom: 10px;
+}
+
+#connectWalletBtn:hover,
+#swapBtn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 18px rgba(129, 103, 169, 0.5);
+  opacity: 0.95;
+}
+
+#walletAddress {
+  text-align: center;
+  color: var(--accent2);
+  font-size: 0.9rem;
+  margin: 10px 0 20px;
+}
+
+#swapStatus {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 12px;
+}
+
+/* 🔮 Hover chiroyli nur */
+button:active {
+  transform: scale(0.98);
+}
+
+/* Responsive tweaks */
+@media (max-width: 480px) {
+  #dexContainer {
+    padding: 18px;
+    border-radius: 12px;
+  }
+  #dexContainer h2 {
+    font-size: 1.3rem;
+  }
+}
