@@ -1,16 +1,7 @@
-// =======================
-// LETAI FRONT CORE JS + WalletConnect V2
-// =======================
+document.addEventListener("DOMContentLoaded", function() {
+  "use strict";
 
-import Web3Modal from "https://unpkg.com/web3modal@1.9.8/dist/index.js";
-import WalletConnectProvider from "https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js";
-import { ethers } from "https://cdn.ethers.io/lib/ethers-5.6.esm.min.js";
-
-document.addEventListener("DOMContentLoaded", async () => {
-
-  // =======================
-  // Cursor Animation
-  // =======================
+  // --- Cursor Animation ---
   const t = document.getElementById("cursor"),
         e = document.getElementById("cursor2"),
         i = document.getElementById("cursor3");
@@ -32,18 +23,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // =======================
-  // Navigation (Burger Menu)
-  // =======================
-  const body = document.querySelector("body");
+  // --- Navigation (Burger Menu) ---
   const menu = document.querySelector(".menu-icon");
+  const body = document.body;
   if (menu) {
     menu.addEventListener("click", () => body.classList.toggle("nav-active"));
   }
 
-  // =======================
-  // Light / Dark Switch + SVG Theme
-  // =======================
+  // --- Light / Dark Switch + SVG theme ---
   const switchEl = document.getElementById("switch");
   const svgEl = document.querySelector(".curen_color");
 
@@ -52,7 +39,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     svgEl.style.color = body.classList.contains("light") ? "#000" : "#fff";
   }
 
-  // Page load theme
   if (localStorage.getItem("theme") === "light") {
     body.classList.add("light");
     if (switchEl) switchEl.classList.add("switched");
@@ -69,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // =======================
-  // DEX (SWAP) SECTION with WalletConnect V2
+  // DEX + WalletConnect V2
   // =======================
   const connectBtn = document.getElementById("connectWalletBtn");
   const walletAddrEl = document.getElementById("walletAddress");
@@ -88,21 +74,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let web3Modal, provider, selectedAccount;
 
-  // WalletConnect V2 provider options
   const providerOptions = {
     walletconnect: {
-      package: WalletConnectProvider,
+      package: window.WalletConnectEthereumProvider,
       options: {
-        projectId: "f76f0bcabf40fadb066240a1c96eff76", // sizning Project ID
-        chains: [1, 56], // Ethereum & BSC
+        projectId: "f76f0bcabf40fadb066240a1c96eff76",
+        chains: [1, 56],
         showQrModal: true
       }
     }
   };
 
-  web3Modal = new Web3Modal({ cacheProvider: false, providerOptions });
+  web3Modal = new window.Web3Modal.default({
+    cacheProvider: false,
+    providerOptions
+  });
 
-  // Connect wallet
   async function connectWallet() {
     try {
       setStatus("Connecting wallet...");
@@ -111,8 +98,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const accounts = await ethersProvider.listAccounts();
       selectedAccount = accounts[0];
       if (!selectedAccount) return setStatus("No accounts found");
-      if (walletAddrEl)
-        walletAddrEl.innerText = `Connected: ${selectedAccount.substring(0,6)}...${selectedAccount.slice(-4)}`;
+      if (walletAddrEl) walletAddrEl.innerText = `Connected: ${selectedAccount.substring(0,6)}...${selectedAccount.slice(-4)}`;
       window.userAccount = selectedAccount;
       setStatus("Wallet connected");
     } catch (err) {
@@ -123,7 +109,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   connectBtn.addEventListener("click", connectWallet);
 
-  // Fetch tokens
   async function fetchTokens() {
     try {
       setStatus("Loading tokens...");
@@ -149,7 +134,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   fetchTokens();
 
-  // Swap function
   if (swapBtn) {
     swapBtn.addEventListener("click", async () => {
       try {
