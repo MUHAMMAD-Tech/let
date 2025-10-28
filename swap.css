@@ -1,79 +1,119 @@
 :root {
-  --bg-main: radial-gradient(circle at top, #0a0a10 0%, #000 100%);
-  --card-bg: rgba(20, 20, 25, 0.95);
-  --accent1: rgb(129, 103, 169);
-  --accent2: rgb(166, 140, 205);
+  /* 🔮 Colors & Theme Variables */
+  --bg-main-light: #f8f9fa; /* body background light theme */
+  --bg-main-dark: #0a0a10;  /* body background dark theme */
+  --card-bg-light: rgba(255,255,255,0.95);
+  --card-bg-dark: rgba(25, 25, 35, 0.95);
+  --accent1: #8153a9;
+  --accent2: #a68ccd;
   --text-light: #f1f3f5;
+  --text-dark: #0a0a10;
   --text-muted: #9aa0a6;
-  --radius: 14px;
+  --radius: 16px;
+  --shadow-primary: rgba(129, 103, 169, 0.3);
+  --shadow-secondary: rgba(129, 103, 169, 0.1);
 }
 
-.kkkkkkk{
+/* 🌐 Body General */
+body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg-main);
   font-family: 'Inter', sans-serif;
-  color: var(--text-light);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   box-sizing: border-box;
+  background: var(--bg-main-dark); /* default dark theme */
+  color: var(--text-light);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
+/* 💫 Theme Classes */
+body.light {
+  background: var(--bg-main-light);
+  color: var(--text-dark);
+}
+
+/* 💎 DEX / Swap Card Container */
 #dexContainer {
   width: 100%;
   max-width: 460px;
-  background: var(--card-bg);
+  background: var(--card-bg-dark);
   border-radius: var(--radius);
-  padding: 25px;
-  box-shadow: 0 0 20px rgba(129, 103, 169, 0.25), 0 0 8px rgba(129, 103, 169, 0.15);
+  padding: 30px;
+  box-shadow: 0 8px 20px var(--shadow-primary), 0 0 10px var(--shadow-secondary);
   position: relative;
-  overflow: visible;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
+body.light #dexContainer {
+  background: var(--card-bg-light);
+  box-shadow: 0 8px 20px rgba(129,103,169,0.15), 0 0 10px rgba(129,103,169,0.05);
+}
+
+#dexContainer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px var(--shadow-primary), 0 0 15px var(--shadow-secondary);
+}
+
+/* ✨ Header */
 #dexContainer h2 {
   text-align: center;
   color: var(--accent1);
-  font-size: 1.7rem;
-  margin: 0 0 18px;
-  font-weight: 600;
+  font-size: 1.8rem;
+  margin: 0 0 20px;
+  font-weight: 700;
   letter-spacing: 0.5px;
+  text-shadow: 0 0 6px var(--accent2);
+  transition: color 0.3s ease;
 }
 
+/* 🏷️ Labels */
 #dexContainer label {
   display: block;
-  margin: 10px 0 6px;
+  margin: 12px 0 6px;
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
 }
 
+/* 📝 Inputs & Selects */
 #dexContainer select,
 #dexContainer input {
   width: 100%;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 14px;
+  border-radius: 12px;
   border: none;
-  background: #16161b;
+  background: #1c1c28;
   color: var(--text-light);
   font-size: 0.95rem;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   box-sizing: border-box;
-  transition: box-shadow 0.2s ease;
+  transition: all 0.3s ease;
+}
+
+body.light #dexContainer select,
+body.light #dexContainer input {
+  background: #f0f0f5;
+  color: var(--text-dark);
 }
 
 #dexContainer select:focus,
 #dexContainer input:focus {
   outline: none;
-  box-shadow: 0 0 8px var(--accent1);
+  box-shadow: 0 0 12px var(--accent1);
 }
 
+/* 🔗 Buttons */
 #connectWalletBtn,
 #swapBtn {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   font-weight: 700;
   font-size: 1rem;
   color: #fff;
@@ -83,42 +123,58 @@
 }
 
 #connectWalletBtn {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 #connectWalletBtn:hover,
 #swapBtn:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 18px rgba(129, 103, 169, 0.5);
+  transform: scale(1.03);
+  box-shadow: 0 0 18px var(--shadow-primary);
   opacity: 0.95;
 }
 
+#connectWalletBtn:active,
+#swapBtn:active {
+  transform: scale(0.97);
+}
+
+/* 💳 Wallet Address & Swap Status */
 #walletAddress {
   text-align: center;
   color: var(--accent2);
-  font-size: 0.9rem;
-  margin: 10px 0 20px;
+  font-size: 0.95rem;
+  margin: 12px 0 18px;
+  word-break: break-all;
 }
 
 #swapStatus {
   text-align: center;
   color: var(--text-muted);
   font-size: 0.9rem;
-  margin-top: 12px;
+  margin-top: 14px;
+  min-height: 20px;
 }
 
-/* 🔮 Hover chiroyli nur */
-button:active {
-  transform: scale(0.98);
+/* 🌟 Swap Section (matn rangini theme bilan boshqarish) */
+.swap-section {
+  transition: color 0.3s ease;
 }
 
-/* Responsive tweaks */
+body.light .swap-section {
+  color: #000;
+}
+
+body:not(.light) .swap-section {
+  color: #fff;
+}
+
+/* 📱 Responsive tweaks */
 @media (max-width: 480px) {
   #dexContainer {
-    padding: 18px;
-    border-radius: 12px;
+    padding: 22px;
+    border-radius: 14px;
   }
   #dexContainer h2 {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
   }
 }
