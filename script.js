@@ -61,3 +61,28 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+
+const swapSection
+
+document.querySelector(".swap-section"
+
+if
+
+if (swapSection) {
+
+(body.classList.contains("light")) { swapSection.style.color =
+
+"#000":
+
+}
+
+// light → qora
+
+else {
+
+swapSection.style.color =
+
+"#fff"; // dark → oq
+
+}
