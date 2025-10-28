@@ -1,9 +1,4 @@
 :root {
-  /* 🔮 Colors & Theme Variables */
-  --bg-main-light: #f8f9fa; /* body background light theme */
-  --bg-main-dark: #0a0a10;  /* body background dark theme */
-  --card-bg-light: rgba(255,255,255,0.95);
-  --card-bg-dark: rgba(25, 25, 35, 0.95);
   --accent1: #8153a9;
   --accent2: #a68ccd;
   --text-light: #f1f3f5;
@@ -14,73 +9,60 @@
   --shadow-secondary: rgba(129, 103, 169, 0.1);
 }
 
-/* 🌐 Body General */
+/* 🌐 Body */
 body {
   margin: 0;
-  min-height: 100vh;
   font-family: 'Inter', sans-serif;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  box-sizing: border-box;
-  background: var(--bg-main-dark); /* default dark theme */
+  flex-direction: column;
+  min-height: 100vh;
   color: var(--text-light);
   transition: background 0.3s ease, color 0.3s ease;
+  background: #0a0a10; /* dark theme default */
 }
 
-/* 💫 Theme Classes */
+/* 🌞 Light Theme */
 body.light {
-  background: var(--bg-main-light);
+  background: #f8f9fa;
   color: var(--text-dark);
 }
 
-/* 💎 DEX / Swap Card Container */
+/* 💎 DEX Container */
 #dexContainer {
   width: 100%;
   max-width: 460px;
-  background: var(--card-bg-dark);
-  border-radius: var(--radius);
+  margin: 30px auto;
   padding: 30px;
+  border-radius: var(--radius);
+  background: rgba(25,25,35,0.95);
   box-shadow: 0 8px 20px var(--shadow-primary), 0 0 10px var(--shadow-secondary);
-  position: relative;
-  overflow: hidden;
   transition: all 0.3s ease;
 }
 
 body.light #dexContainer {
-  background: var(--card-bg-light);
+  background: rgba(255,255,255,0.95);
   box-shadow: 0 8px 20px rgba(129,103,169,0.15), 0 0 10px rgba(129,103,169,0.05);
 }
 
-#dexContainer:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px var(--shadow-primary), 0 0 15px var(--shadow-secondary);
-}
-
-/* ✨ Header */
 #dexContainer h2 {
   text-align: center;
-  color: var(--accent1);
   font-size: 1.8rem;
-  margin: 0 0 20px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+  color: var(--accent1);
   text-shadow: 0 0 6px var(--accent2);
   transition: color 0.3s ease;
 }
 
-/* 🏷️ Labels */
 #dexContainer label {
   display: block;
   margin: 12px 0 6px;
-  color: var(--text-muted);
   font-size: 0.9rem;
   font-weight: 500;
+  color: var(--text-muted);
   transition: color 0.3s ease;
 }
 
-/* 📝 Inputs & Selects */
 #dexContainer select,
 #dexContainer input {
   width: 100%;
@@ -89,9 +71,8 @@ body.light #dexContainer {
   border: none;
   background: #1c1c28;
   color: var(--text-light);
-  font-size: 0.95rem;
   margin-bottom: 14px;
-  box-sizing: border-box;
+  font-size: 0.95rem;
   transition: all 0.3s ease;
 }
 
@@ -107,13 +88,12 @@ body.light #dexContainer input {
   box-shadow: 0 0 12px var(--accent1);
 }
 
-/* 🔗 Buttons */
 #connectWalletBtn,
 #swapBtn {
   width: 100%;
   padding: 14px;
-  border: none;
   border-radius: 12px;
+  border: none;
   font-weight: 700;
   font-size: 1rem;
   color: #fff;
@@ -138,7 +118,6 @@ body.light #dexContainer input {
   transform: scale(0.97);
 }
 
-/* 💳 Wallet Address & Swap Status */
 #walletAddress {
   text-align: center;
   color: var(--accent2);
@@ -155,7 +134,7 @@ body.light #dexContainer input {
   min-height: 20px;
 }
 
-/* 🌟 Swap Section (matn rangini theme bilan boshqarish) */
+/* Swap section text color */
 .swap-section {
   transition: color 0.3s ease;
 }
@@ -168,7 +147,17 @@ body:not(.light) .swap-section {
   color: #fff;
 }
 
-/* 📱 Responsive tweaks */
+/* Cursors */
+.cursor, .cursor2, .cursor3 {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease;
+  z-index: 10000;
+}
+
+/* Responsive */
 @media (max-width: 480px) {
   #dexContainer {
     padding: 22px;
