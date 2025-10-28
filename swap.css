@@ -137,6 +137,7 @@ body.light #dexContainer input {
 /* Swap section text color */
 .swap-section {
   transition: color 0.3s ease;
+  z-index: -1;
 }
 
 body.light .swap-section {
