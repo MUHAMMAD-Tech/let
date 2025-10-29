@@ -136,9 +136,34 @@ body.light #dexContainer input {
 
 /* Swap section text color */
 .swap-section {
+  height: 500px;
+  width: 90%;
+  max-width: 800px;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 20px;
   transition: color 0.3s ease;
   z-index: -12;
-  height: 500px;
+
+  /* 🔹 Shaffof shisha fon */
+  background: rgba(255, 255, 255, 0.08); /* juda shaffof oq fon */
+  backdrop-filter: blur(15px); /* orqa fonni xiralashtiradi */
+  -webkit-backdrop-filter: blur(15px); /* Safari uchun */
+
+  /* 🔹 3D effekt */
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+
+  border: 1px solid rgba(255, 255, 255, 0.2); /* engil oq chegara */
+}
+
+/* Telefonlar uchun */
+@media (max-width: 400px) {
+  .swap-section {
+    width: 300px;
+  }
 }
 
 body.light .swap-section {
@@ -175,7 +200,6 @@ body:not(.light) .swap-section {
   position: absolute;
   top: 120px;
   border-radius: 20px;
-  border: 2px solid #8153a9;
 }
 
 .mb-4{
