@@ -170,6 +170,14 @@ body:not(.light) .swap-section {
   }
 }
 
+
+.swapc{
+  position: absolute;
+  top: 120px;
+  border-radius: 20px;
+  border: 2px solid #8153a9;
+}
+
 .mb-4{
   position: relative;
   top: 15px;
