@@ -138,6 +138,7 @@ body.light #dexContainer input {
 .swap-section {
   transition: color 0.3s ease;
   z-index: -12;
+  height: 500px;
 }
 
 body.light .swap-section {
@@ -167,4 +168,9 @@ body:not(.light) .swap-section {
   #dexContainer h2 {
     font-size: 1.5rem;
   }
+}
+
+.mb-4{
+  position: relative;
+  top: 15px;
 }
