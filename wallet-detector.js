@@ -1,7 +1,6 @@
 // wallet-detector.js - Walletlarni avtomatik aniqlash
 class WalletDetector {
     constructor() {
-        this.availableWallets = [];
         this.detectedWallets = [];
     }
 
@@ -15,7 +14,6 @@ class WalletDetector {
         
         console.log('🔍 Scanning for available wallets...');
 
-        // MetaMask
         if (typeof window.ethereum !== 'undefined') {
             if (window.ethereum.isMetaMask) {
                 this.detectedWallets.push({
@@ -28,7 +26,6 @@ class WalletDetector {
                 });
             }
             
-            // Trust Wallet
             if (window.ethereum.isTrust) {
                 this.detectedWallets.push({
                     id: 'trustwallet',
@@ -40,7 +37,6 @@ class WalletDetector {
                 });
             }
 
-            // Boshqa EVM walletlar
             if (window.ethereum.selectedAddress && this.detectedWallets.length === 0) {
                 this.detectedWallets.push({
                     id: 'evm',
@@ -53,7 +49,6 @@ class WalletDetector {
             }
         }
 
-        // Phantom
         if (window.solana && window.solana.isPhantom) {
             this.detectedWallets.push({
                 id: 'phantom',
@@ -65,7 +60,6 @@ class WalletDetector {
             });
         }
 
-        // Coinbase Wallet
         if (window.ethereum && window.ethereum.isCoinbaseWallet) {
             this.detectedWallets.push({
                 id: 'coinbase',
@@ -93,7 +87,6 @@ class WalletDetector {
                     </div>
                     <div class="wallet-selector-body">
                         <div id="detectedWalletsList" class="wallets-list">
-                            <!-- Detected wallets will appear here -->
                         </div>
                         <div class="wallet-install-links">
                             <p>Don't have a wallet?</p>
@@ -162,29 +155,3 @@ class WalletDetector {
             walletElement.addEventListener('click', () => {
                 this.connectWallet(wallet.id);
             });
-
-            walletsList.appendChild(walletElement);
-        });
-    }
-
-    showSelector() {
-        this.detectWallets();
-        this.updateWalletList();
-        document.getElementById('walletSelector').style.display = 'block';
-    }
-
-    async connectWallet(walletId) {
-        const modal = document.getElementById('walletSelector');
-        modal.style.display = 'none';
-
-        try {
-            if (typeof realSwapSystem !== 'undefined') {
-                await realSwapSystem.connectWallet(walletId);
-            } else {
-                console.error('Real swap system not available');
-            }
-        } catch (error) {
-            console.error('Wallet connection failed:', error);
-        }
-    }
-}
