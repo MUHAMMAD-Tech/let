@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trust Wallet - Reliable CDN Version</title>
+    <title>Trust Wallet - Multiple CDN Fallbacks</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -11,6 +11,10 @@
             color: white;
             padding: 20px;
             text-align: center;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
         }
         .btn {
             padding: 15px 30px;
@@ -21,95 +25,194 @@
             cursor: pointer;
             background: #337CCF;
             color: white;
+            width: 100%;
         }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         #status { 
-            margin: 20px; 
+            margin: 20px 0; 
             padding: 15px; 
             border-radius: 8px;
             background: #333;
         }
+        .library-status {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
-    <h2>🔗 Trust Wallet Connect</h2>
-    <p>Using reliable CDN sources</p>
-    
-    <button id="connectBtn" class="btn" disabled>Loading Libraries...</button>
-    <div id="qrcode" style="margin: 20px;"></div>
-    <div id="status">Initializing...</div>
+    <div class="container">
+        <h2>🔗 Trust Wallet Connect</h2>
+        <p>Multiple CDN Fallbacks</p>
+        
+        <div class="library-status">
+            <h4>📚 Library Loading Status:</h4>
+            <div id="libraryStatus">Loading libraries...</div>
+        </div>
+        
+        <button id="connectBtn" class="btn" disabled>Loading Libraries...</button>
+        <div id="qrcode" style="margin: 20px;"></div>
+        <div id="status">Initializing...</div>
+    </div>
 
-    <!-- High-reliability CDN sources -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.9.0/dist/umd/index.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <!-- CDN 1: jsDelivr -->
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.9.0/dist/umd/index.min.js" onload="libraryLoaded('wc', 'jsDelivr')" onerror="tryCDN2()"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js" onload="libraryLoaded('ethers', 'jsDelivr')"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" onload="libraryLoaded('qrcode', 'jsDelivr')"></script>
 
     <script>
         let provider = null;
+        let loadedLibraries = {
+            wc: false,
+            ethers: false,
+            qrcode: false
+        };
+        let currentCDN = 'jsDelivr';
+
+        function updateLibraryStatus() {
+            const status = document.getElementById('libraryStatus');
+            const wcStatus = loadedLibraries.wc ? '✅' : '❌';
+            const ethersStatus = loadedLibraries.ethers ? '✅' : '❌';
+            const qrStatus = loadedLibraries.qrcode ? '✅' : '❌';
+            
+            status.innerHTML = `
+                WalletConnect: ${wcStatus} (${currentCDN})<br>
+                Ethers.js: ${ethersStatus}<br>
+                QR Code: ${qrStatus}
+            `;
+
+            // Enable button if all libraries are loaded
+            if (loadedLibraries.wc && loadedLibraries.ethers && loadedLibraries.qrcode) {
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('connectBtn').textContent = '🔗 Connect Trust Wallet';
+                updateStatus('✅ All libraries loaded! Ready to connect.');
+                initializeWalletConnect();
+            }
+        }
+
+        function libraryLoaded(lib, cdn) {
+            console.log(`${lib} loaded from ${cdn}`);
+            loadedLibraries[lib] = true;
+            currentCDN = cdn;
+            updateLibraryStatus();
+        }
+
+        function tryCDN2() {
+            console.log('CDN 1 failed, trying CDN 2...');
+            // Remove any existing script
+            const existingScript = document.querySelector('script[src*="walletconnect"]');
+            if (existingScript) existingScript.remove();
+            
+            // Try CDN 2: unpkg
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/@walletconnect/ethereum-provider@2.9.0/dist/umd/index.min.js';
+            script.onload = () => libraryLoaded('wc', 'unpkg');
+            script.onerror = tryCDN3;
+            document.head.appendChild(script);
+        }
+
+        function tryCDN3() {
+            console.log('CDN 2 failed, trying CDN 3...');
+            updateStatus('🔄 Trying alternative CDN sources...');
+            
+            // Try CDN 3: CDNJS (different build)
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/walletconnect/1.8.0/walletconnect-umd.min.js';
+            script.onload = () => {
+                console.log('Loaded WalletConnect v1 as fallback');
+                loadedLibraries.wc = true;
+                currentCDN = 'cdnjs-v1';
+                updateLibraryStatus();
+            };
+            script.onerror = () => {
+                updateStatus('❌ All CDNs failed. Please check your internet connection.', true);
+            };
+            document.head.appendChild(script);
+        }
 
         function updateStatus(message, isError = false) {
             const status = document.getElementById('status');
             status.textContent = message;
             status.style.background = isError ? '#d32f2f' : '#2d2d2d';
-            status.style.color = isError ? 'white' : 'white';
             console.log(message);
         }
 
-        function enableConnectButton() {
-            const btn = document.getElementById('connectBtn');
-            btn.disabled = false;
-            btn.textContent = '🔗 Connect Trust Wallet';
-        }
-
-        async function initialize() {
+        async function initializeWalletConnect() {
             try {
-                // Check if all libraries are loaded
-                if (typeof ethers === 'undefined') {
-                    throw new Error('Ethers.js not loaded');
-                }
-                if (typeof EthereumProvider === 'undefined') {
-                    throw new Error('WalletConnect not loaded');
-                }
-                if (typeof QRCode === 'undefined') {
-                    throw new Error('QRCode not loaded');
-                }
-
-                updateStatus('✅ All libraries loaded!');
-                enableConnectButton();
-
-                // Initialize WalletConnect
-                provider = await EthereumProvider.init({
-                    projectId: "f76f0bcabf40fadb066240a1c96eff76",
-                    chains: [1],
-                    showQrModal: false
-                });
-
-                provider.on("display_uri", (uri) => {
-                    document.getElementById('qrcode').innerHTML = '';
-                    QRCode.toCanvas(document.getElementById('qrcode'), uri, { width: 200 }, (err) => {
-                        if (err) console.error(err);
+                updateStatus('🚀 Initializing WalletConnect...');
+                
+                // Check which version of WalletConnect we have
+                if (typeof EthereumProvider !== 'undefined') {
+                    // WalletConnect v2
+                    provider = await EthereumProvider.init({
+                        projectId: "f76f0bcabf40fadb066240a1c96eff76",
+                        chains: [1],
+                        showQrModal: false,
+                        methods: ["eth_sendTransaction", "personal_sign"],
+                        events: ["chainChanged", "accountsChanged"]
                     });
-                    updateStatus('📱 Scan QR code with Trust Wallet');
-                });
+                } else if (typeof WalletConnect !== 'undefined') {
+                    // WalletConnect v1 (fallback)
+                    updateStatus('⚠️ Using WalletConnect v1 (fallback)');
+                    provider = new WalletConnect({
+                        bridge: "https://bridge.walletconnect.org",
+                        qrcodeModal: false
+                    });
+                } else {
+                    throw new Error('No WalletConnect provider available');
+                }
 
-                provider.on("connect", () => {
-                    updateStatus('✅ Connected successfully!');
-                    document.getElementById('connectBtn').textContent = '✅ Connected';
-                    document.getElementById('connectBtn').disabled = true;
-                });
+                // Set up event listeners
+                if (provider.on) {
+                    provider.on("display_uri", (uri) => {
+                        showQRCode(uri);
+                        updateStatus('📱 Scan QR code with Trust Wallet');
+                    });
 
-                updateStatus('✅ Ready to connect!');
+                    provider.on("connect", () => {
+                        updateStatus('✅ Connected successfully!');
+                        document.getElementById('connectBtn').textContent = '✅ Connected';
+                        document.getElementById('connectBtn').disabled = true;
+                    });
+                }
+
+                updateStatus('✅ WalletConnect initialized! Click connect.');
 
             } catch (error) {
-                updateStatus(`❌ Error: ${error.message}`, true);
-                console.error('Initialization error:', error);
+                updateStatus(`❌ Initialization failed: ${error.message}`, true);
             }
+        }
+
+        function showQRCode(uri) {
+            const qrElement = document.getElementById('qrcode');
+            qrElement.innerHTML = '';
+            QRCode.toCanvas(qrElement, uri, { width: 200 }, (err) => {
+                if (err) {
+                    console.error('QR error:', err);
+                    updateStatus('❌ QR code generation failed', true);
+                }
+            });
         }
 
         async function connect() {
             try {
                 updateStatus('🔗 Connecting...');
-                await provider.connect();
+                
+                if (!provider) {
+                    await initializeWalletConnect();
+                }
+
+                if (provider.connect) {
+                    await provider.connect();
+                } else if (provider.enable) {
+                    await provider.enable();
+                } else {
+                    throw new Error('No connect method available');
+                }
+
             } catch (error) {
                 updateStatus(`❌ Connection failed: ${error.message}`, true);
             }
@@ -117,15 +220,12 @@
 
         document.getElementById('connectBtn').addEventListener('click', connect);
 
-        // Start initialization when page loads
-        document.addEventListener('DOMContentLoaded', initialize);
-
-        // Fallback if libraries don't load
+        // Timeout check
         setTimeout(() => {
-            if (document.getElementById('connectBtn').disabled) {
-                updateStatus('⚠️ Libraries taking too long. Please refresh the page.', true);
+            if (!loadedLibraries.wc) {
+                updateStatus('⚠️ WalletConnect loading slowly. Still trying...');
             }
-        }, 10000);
+        }, 5000);
     </script>
 </body>
 </html>
