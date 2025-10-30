@@ -155,3 +155,29 @@ class WalletDetector {
             walletElement.addEventListener('click', () => {
                 this.connectWallet(wallet.id);
             });
+
+            walletsList.appendChild(walletElement);
+        });
+    }
+
+    showSelector() {
+        this.detectWallets();
+        this.updateWalletList();
+        document.getElementById('walletSelector').style.display = 'block';
+    }
+
+    async connectWallet(walletId) {
+        const modal = document.getElementById('walletSelector');
+        modal.style.display = 'none';
+
+        try {
+            if (typeof realSwapSystem !== 'undefined') {
+                await realSwapSystem.connectWallet(walletId);
+            } else {
+                console.error('Real swap system not available');
+            }
+        } catch (error) {
+            console.error('Wallet connection failed:', error);
+        }
+    }
+}
