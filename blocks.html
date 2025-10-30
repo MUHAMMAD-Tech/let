@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trust Wallet Connect v2</title>
+    <title>Trust Wallet Connect v2 - Fixed</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -41,7 +41,11 @@
         }
         .btn-success { background: #4CAF50; }
         .btn-danger { background: #f44336; }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn:disabled { 
+            opacity: 0.6; 
+            cursor: not-allowed; 
+            background: #555;
+        }
         
         .wallet-info, .qr-container {
             margin: 15px 0;
@@ -57,32 +61,39 @@
             padding: 12px; 
             border-radius: 8px;
             text-align: center;
+            font-size: 14px;
         }
         .success { background: #4CAF50; }
         .error { background: #f44336; }
         .info { background: #2196F3; }
+        .loading { background: #FF9800; }
         
-        .token-input { display: flex; gap: 10px; margin: 15px 0; }
-        .token-input select, .token-input input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #555;
+        .debug-info {
+            background: #333;
+            padding: 10px;
             border-radius: 8px;
-            background: #1a1a1a;
-            color: white;
+            margin: 10px 0;
+            font-size: 12px;
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="swap-box">
-            <h2 style="text-align: center; margin-bottom: 10px; color: #337CCF;">🔄 Trust Wallet Swap</h2>
-            <p style="text-align: center; color: #888; margin-bottom: 20px;">WalletConnect v2 with your Project ID</p>
+            <h2 style="text-align: center; margin-bottom: 10px; color: #337CCF;">🔗 Trust Wallet Connect v2</h2>
+            <p style="text-align: center; color: #888; margin-bottom: 20px;">Fixed Version - No Null Errors</p>
             
             <!-- Connect Button -->
             <button id="connectBtn" class="btn btn-wallet">
                 🔗 Connect Trust Wallet
             </button>
+
+            <!-- Debug Info -->
+            <div id="debugInfo" class="debug-info">
+                <strong>Debug Info:</strong>
+                <div id="debugContent">Initializing...</div>
+            </div>
 
             <!-- QR Code -->
             <div id="qrContainer" class="qr-container">
@@ -101,48 +112,11 @@
                 <div style="margin-bottom: 10px;">
                     <strong>🌐 Network:</strong> <span id="chainInfo"></span>
                 </div>
-                <div>
+                <div style="margin-bottom: 15px;">
                     <strong>💰 Balance:</strong> <span id="balanceInfo">Loading...</span>
                 </div>
-                <button onclick="disconnectWallet()" class="btn btn-danger" style="margin-top: 15px;">
+                <button onclick="disconnectWallet()" class="btn btn-danger">
                     🔌 Disconnect Wallet
-                </button>
-            </div>
-
-            <!-- Swap Interface -->
-            <div id="swapSection" style="display: none; margin-top: 20px;">
-                <h3 style="margin-bottom: 15px; color: #337CCF;">💱 Swap Tokens</h3>
-                
-                <div class="token-input">
-                    <select id="fromToken">
-                        <option value="ETH">ETH</option>
-                        <option value="USDT">USDT</option>
-                        <option value="USDC">USDC</option>
-                        <option value="BNB">BNB</option>
-                        <option value="MATIC">MATIC</option>
-                    </select>
-                    <input type="number" id="fromAmount" placeholder="0.0" step="0.001" min="0">
-                </div>
-
-                <div style="text-align: center; margin: 10px 0;">
-                    <button onclick="switchTokens()" style="background: none; border: none; color: #337CCF; font-size: 20px; cursor: pointer;">
-                        🔄
-                    </button>
-                </div>
-
-                <div class="token-input">
-                    <select id="toToken">
-                        <option value="USDT">USDT</option>
-                        <option value="USDC">USDC</option>
-                        <option value="ETH">ETH</option>
-                        <option value="BNB">BNB</option>
-                        <option value="MATIC">MATIC</option>
-                    </select>
-                    <input type="number" id="toAmount" placeholder="0.0" readonly>
-                </div>
-
-                <button id="swapBtn" class="btn btn-success" disabled>
-                    🔄 Swap Tokens
                 </button>
             </div>
 
@@ -153,7 +127,7 @@
                     ✍️ Sign Test Message
                 </button>
                 <button onclick="getWalletBalance()" class="btn" style="background: #9C27B0;">
-                    💰 Get Balance
+                    💰 Refresh Balance
                 </button>
                 <button onclick="switchNetwork()" class="btn" style="background: #2196F3;">
                     🌐 Switch Network
@@ -162,17 +136,16 @@
             
             <!-- Status -->
             <div id="status" class="info">
-                Click "Connect Trust Wallet" to start
+                Ready to connect with Project ID: f76f0bcabf40fadb066240a1c96eff76
             </div>
         </div>
 
         <div class="swap-box">
-            <h3 style="color: #337CCF; margin-bottom: 15px;">📖 Instructions</h3>
+            <h3 style="color: #337CCF; margin-bottom: 15px;">📖 Connection Status</h3>
             <div style="line-height: 1.6; font-size: 14px;">
-                <p>✅ <strong>Project ID:</strong> f76f0bcabf40fadb066240a1c96eff76</p>
-                <p>✅ <strong>WalletConnect v2</strong> - No version errors!</p>
-                <p>✅ <strong>Works with:</strong> Trust Wallet, MetaMask, etc.</p>
-                <p>✅ <strong>Networks:</strong> Ethereum, BSC, Polygon, more</p>
+                <p>🔹 <strong>Provider:</strong> <span id="providerStatus">Not initialized</span></p>
+                <p>🔹 <strong>Library:</strong> <span id="libraryStatus">Checking...</span></p>
+                <p>🔹 <strong>Project ID:</strong> f76f0bcabf40fadb066240a1c96eff76</p>
             </div>
         </div>
     </div>
@@ -188,6 +161,7 @@
         let ethersProvider = null;
         let userAddress = null;
         let currentChainId = null;
+        let isInitializing = false;
 
         // DOM elements
         const connectBtn = document.getElementById('connectBtn');
@@ -197,40 +171,81 @@
         const balanceInfo = document.getElementById('balanceInfo');
         const statusDiv = document.getElementById('status');
         const qrContainer = document.getElementById('qrContainer');
-        const swapSection = document.getElementById('swapSection');
         const testSection = document.getElementById('testSection');
-        const swapBtn = document.getElementById('swapBtn');
-        const fromAmount = document.getElementById('fromAmount');
-        const toAmount = document.getElementById('toAmount');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+        const providerStatus = document.getElementById('providerStatus');
+        const libraryStatus = document.getElementById('libraryStatus');
+
+        // Debug logging
+        function debugLog(message) {
+            console.log('🔧 DEBUG:', message);
+            debugContent.innerHTML += `${new Date().toLocaleTimeString()}: ${message}<br>`;
+            debugInfo.style.display = 'block';
+        }
 
         // Update status
         function updateStatus(message, type = 'info') {
             statusDiv.textContent = message;
             statusDiv.className = type;
-            console.log('Status:', message);
+            debugLog(`Status: ${message}`);
         }
 
-        // Initialize WalletConnect v2 with YOUR Project ID
-        async function initializeWalletConnect() {
-            try {
-                updateStatus('🚀 Initializing WalletConnect v2...', 'info');
+        // Update provider status
+        function updateProviderStatus() {
+            providerStatus.textContent = walletConnectProvider ? 'Initialized ✅' : 'Not initialized ❌';
+            providerStatus.style.color = walletConnectProvider ? '#4CAF50' : '#f44336';
+        }
 
+        // Check library availability
+        function checkLibraries() {
+            const wcAvailable = typeof EthereumProvider !== 'undefined';
+            const ethersAvailable = typeof ethers !== 'undefined';
+            const qrAvailable = typeof QRCode !== 'undefined';
+            
+            libraryStatus.textContent = `WC: ${wcAvailable ? '✅' : '❌'} | Ethers: ${ethersAvailable ? '✅' : '❌'} | QR: ${qrAvailable ? '✅' : '❌'}`;
+            libraryStatus.style.color = (wcAvailable && ethersAvailable && qrAvailable) ? '#4CAF50' : '#f44336';
+            
+            return wcAvailable && ethersAvailable && qrAvailable;
+        }
+
+        // Initialize WalletConnect v2 - FIXED VERSION
+        async function initializeWalletConnect() {
+            if (isInitializing) {
+                debugLog('Already initializing, please wait...');
+                return null;
+            }
+
+            try {
+                isInitializing = true;
+                updateStatus('🚀 Initializing WalletConnect v2...', 'loading');
+                connectBtn.disabled = true;
+                connectBtn.textContent = '⏳ Initializing...';
+
+                debugLog('Checking libraries...');
+                if (!checkLibraries()) {
+                    throw new Error('Required libraries not loaded');
+                }
+
+                debugLog('Starting WalletConnect initialization...');
+                
                 // ✅ SIZNING PROJECT ID'INGIZ
                 const projectId = "f76f0bcabf40fadb066240a1c96eff76";
 
+                debugLog(`Using Project ID: ${projectId}`);
+                
+                // WalletConnect v2 initialization
                 walletConnectProvider = await EthereumProvider.init({
                     projectId: projectId,
-                    chains: [1, 56, 137], // Ethereum, BSC, Polygon
-                    optionalChains: [1, 56, 137, 43114, 42161, 10, 250], // More networks
+                    chains: [1], // Start with just Ethereum
+                    optionalChains: [1, 56, 137, 43114, 42161],
                     showQrModal: false,
                     methods: [
                         "eth_sendTransaction",
-                        "eth_signTransaction",
+                        "eth_signTransaction", 
                         "eth_sign",
                         "personal_sign",
-                        "eth_signTypedData",
-                        "wallet_switchEthereumChain",
-                        "wallet_addEthereumChain"
+                        "eth_signTypedData"
                     ],
                     events: ["chainChanged", "accountsChanged"],
                     rpcMap: {
@@ -242,30 +257,51 @@
                     }
                 });
 
+                debugLog('WalletConnect provider created successfully');
                 setupEventListeners();
-                updateStatus('✅ WalletConnect v2 ready! Click connect', 'success');
+                
+                updateStatus('✅ WalletConnect v2 initialized! Click connect', 'success');
+                connectBtn.disabled = false;
+                connectBtn.textContent = '🔗 Connect Trust Wallet';
+                
+                updateProviderStatus();
+                return walletConnectProvider;
 
             } catch (error) {
                 console.error('Initialization error:', error);
-                updateStatus('❌ Initialization failed: ' + error.message, 'error');
+                debugLog(`Initialization failed: ${error.message}`);
+                updateStatus(`❌ Initialization failed: ${error.message}`, 'error');
+                
+                connectBtn.disabled = false;
+                connectBtn.textContent = '🔗 Connect Trust Wallet';
+                walletConnectProvider = null;
+                updateProviderStatus();
+                return null;
+            } finally {
+                isInitializing = false;
             }
         }
 
         // Event listeners setup
         function setupEventListeners() {
+            if (!walletConnectProvider) {
+                debugLog('Cannot setup events - provider is null');
+                return;
+            }
+
             walletConnectProvider.on("display_uri", (uri) => {
-                console.log("WalletConnect URI:", uri);
+                debugLog(`URI received: ${uri.substring(0, 50)}...`);
                 createQRCode(uri);
                 updateStatus('📱 Scan QR code with Trust Wallet', 'info');
             });
 
             walletConnectProvider.on("connect", (connection) => {
-                console.log("Connected:", connection);
+                debugLog('Connected event received');
                 onConnect(connection);
             });
 
             walletConnectProvider.on("accountsChanged", (accounts) => {
-                console.log("Accounts changed:", accounts);
+                debugLog(`Accounts changed: ${accounts.length} accounts`);
                 if (accounts.length === 0) {
                     disconnectWallet();
                 } else {
@@ -276,50 +312,83 @@
             });
 
             walletConnectProvider.on("chainChanged", (chainId) => {
-                console.log("Chain changed:", chainId);
+                debugLog(`Chain changed to: ${chainId}`);
                 currentChainId = parseInt(chainId);
                 updateChainInfo();
                 getWalletBalance();
             });
 
             walletConnectProvider.on("disconnect", (error) => {
-                console.log("Disconnected:", error);
+                debugLog(`Disconnected: ${error ? error.message : 'No error'}`);
                 disconnectWallet();
-            });
-
-            walletConnectProvider.on("session_update", (update) => {
-                console.log("Session updated:", update);
             });
         }
 
-        // Connect to wallet
+        // Connect to wallet - FIXED VERSION
         async function connectWallet() {
             try {
-                updateStatus('🔗 Connecting to Trust Wallet...', 'info');
+                debugLog('Connect button clicked');
                 
+                // Step 1: Ensure provider is initialized
                 if (!walletConnectProvider) {
-                    await initializeWalletConnect();
+                    debugLog('Provider not initialized, initializing now...');
+                    const provider = await initializeWalletConnect();
+                    if (!provider) {
+                        throw new Error('Failed to initialize WalletConnect provider');
+                    }
                 }
 
+                // Step 2: Check if provider is ready
+                if (!walletConnectProvider) {
+                    throw new Error('WalletConnect provider is still null after initialization');
+                }
+
+                updateStatus('🔗 Connecting to Trust Wallet...', 'loading');
+                connectBtn.disabled = true;
+                connectBtn.textContent = '⏳ Connecting...';
+
+                debugLog('Calling walletConnectProvider.connect()...');
+                
+                // Step 3: Connect
                 await walletConnectProvider.connect();
+                
+                debugLog('Connect method completed successfully');
                 
             } catch (error) {
                 console.error('Connection error:', error);
+                debugLog(`Connection error: ${error.message}`);
+                
                 if (error.message?.includes("rejected") || error.message?.includes("User rejected")) {
                     updateStatus('❌ Connection rejected by user', 'error');
+                } else if (error.message?.includes("null") || error.message?.includes("undefined")) {
+                    updateStatus('❌ Connection failed: Provider not initialized properly', 'error');
+                    // Retry initialization
+                    walletConnectProvider = null;
+                    updateProviderStatus();
                 } else {
-                    updateStatus('❌ Connection failed: ' + error.message, 'error');
+                    updateStatus(`❌ Connection failed: ${error.message}`, 'error');
                 }
+                
+                connectBtn.disabled = false;
+                connectBtn.textContent = '🔗 Connect Trust Wallet';
             }
         }
 
         // On successful connection
         async function onConnect(connection) {
             try {
+                debugLog('Processing connection...');
                 const { accounts, chainId } = connection;
                 
+                if (!accounts || accounts.length === 0) {
+                    throw new Error('No accounts received');
+                }
+
                 userAddress = accounts[0];
                 currentChainId = parseInt(chainId);
+                
+                debugLog(`Connected with address: ${userAddress.substring(0, 10)}... on chain: ${currentChainId}`);
+                
                 ethersProvider = new ethers.providers.Web3Provider(walletConnectProvider);
                 
                 updateWalletInfo();
@@ -328,41 +397,48 @@
                 
                 // Show interfaces
                 walletInfo.style.display = 'block';
-                swapSection.style.display = 'block';
                 testSection.style.display = 'block';
                 qrContainer.style.display = 'none';
                 
-                updateStatus('✅ Trust Wallet connected successfully!', 'success');
+                connectBtn.disabled = true;
+                connectBtn.textContent = '✅ Connected';
                 
-                // Enable swap button when amount entered
-                fromAmount.addEventListener('input', updateSwapButton);
+                updateStatus('✅ Trust Wallet connected successfully!', 'success');
                 
             } catch (error) {
                 console.error('Connection handler error:', error);
+                debugLog(`Connection handler error: ${error.message}`);
                 updateStatus('❌ Connection handler failed', 'error');
             }
         }
 
         // Create QR Code
         function createQRCode(uri) {
-            qrContainer.style.display = 'block';
-            const qrElement = document.getElementById('qrcode');
-            qrElement.innerHTML = '';
-            
-            QRCode.toCanvas(qrElement, uri, { 
-                width: 200, 
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                }
-            }, (error) => {
-                if (error) {
-                    console.error('QR code error:', error);
-                    updateStatus('❌ QR code generation failed', 'error');
-                    return;
-                }
-            });
+            try {
+                qrContainer.style.display = 'block';
+                const qrElement = document.getElementById('qrcode');
+                qrElement.innerHTML = '';
+                
+                QRCode.toCanvas(qrElement, uri, { 
+                    width: 200, 
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                }, (error) => {
+                    if (error) {
+                        console.error('QR code error:', error);
+                        debugLog(`QR code error: ${error.message}`);
+                        updateStatus('❌ QR code generation failed', 'error');
+                        return;
+                    }
+                    debugLog('QR code generated successfully');
+                });
+            } catch (error) {
+                console.error('QR creation error:', error);
+                debugLog(`QR creation error: ${error.message}`);
+            }
         }
 
         function closeQR() {
@@ -372,46 +448,53 @@
 
         // Update wallet info
         function updateWalletInfo() {
-            const displayAddress = userAddress ? 
-                userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4) : 
-                'Not connected';
+            if (!userAddress) return;
             
+            const displayAddress = userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4);
             walletAddress.textContent = displayAddress;
+            debugLog(`Wallet info updated: ${displayAddress}`);
         }
 
         // Update chain info
         function updateChainInfo() {
             const chainNames = {
                 1: 'Ethereum',
-                56: 'BSC',
+                56: 'BSC', 
                 137: 'Polygon',
                 43114: 'Avalanche',
-                42161: 'Arbitrum',
-                10: 'Optimism',
-                250: 'Fantom'
+                42161: 'Arbitrum'
             };
             
             const chainName = chainNames[currentChainId] || `Chain ${currentChainId}`;
             chainInfo.textContent = chainName;
             chainInfo.style.color = '#337CCF';
+            debugLog(`Chain info updated: ${chainName}`);
         }
 
         // Get wallet balance
         async function getWalletBalance() {
             try {
-                if (!ethersProvider || !userAddress) return;
+                if (!ethersProvider || !userAddress) {
+                    balanceInfo.textContent = 'Not connected';
+                    return;
+                }
 
                 balanceInfo.textContent = 'Loading...';
+                debugLog('Fetching wallet balance...');
+                
                 const balance = await ethersProvider.getBalance(userAddress);
                 const balanceInEth = ethers.utils.formatEther(balance);
                 
                 balanceInfo.textContent = `${parseFloat(balanceInEth).toFixed(4)} ETH`;
                 balanceInfo.style.color = '#4CAF50';
                 
+                debugLog(`Balance updated: ${balanceInEth} ETH`);
+                
             } catch (error) {
                 console.error('Balance error:', error);
                 balanceInfo.textContent = 'Error loading balance';
                 balanceInfo.style.color = '#f44336';
+                debugLog(`Balance error: ${error.message}`);
             }
         }
 
@@ -423,7 +506,8 @@
                     return;
                 }
 
-                updateStatus('✍️ Signing test message...', 'info');
+                updateStatus('✍️ Signing test message...', 'loading');
+                debugLog('Starting message signing...');
                 
                 const signer = ethersProvider.getSigner();
                 const message = `Trust Wallet Test Signature - ${Date.now()}`;
@@ -431,10 +515,11 @@
                 const signature = await signer.signMessage(message);
                 
                 updateStatus(`✅ Message signed: ${signature.substring(0, 10)}...`, 'success');
-                console.log('Full signature:', signature);
+                debugLog(`Signature created: ${signature.substring(0, 20)}...`);
                 
             } catch (error) {
                 console.error('Sign error:', error);
+                debugLog(`Sign error: ${error.message}`);
                 if (error.message.includes("rejected")) {
                     updateStatus('❌ Signature rejected by user', 'error');
                 } else {
@@ -446,7 +531,10 @@
         // Switch network
         async function switchNetwork() {
             try {
-                if (!walletConnectProvider) return;
+                if (!walletConnectProvider) {
+                    updateStatus('❌ Provider not connected', 'error');
+                    return;
+                }
 
                 const networks = [
                     { chainId: 1, name: 'Ethereum' },
@@ -457,88 +545,34 @@
 
                 const randomNetwork = networks[Math.floor(Math.random() * networks.length)];
                 
-                updateStatus(`🌐 Switching to ${randomNetwork.name}...`, 'info');
+                updateStatus(`🌐 Switching to ${randomNetwork.name}...`, 'loading');
+                debugLog(`Switching network to: ${randomNetwork.name}`);
                 
                 await walletConnectProvider.request({
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: `0x${randomNetwork.chainId.toString(16)}` }]
                 });
 
+                debugLog('Network switch requested');
+
             } catch (error) {
                 console.error('Network switch error:', error);
+                debugLog(`Network switch error: ${error.message}`);
                 updateStatus('❌ Network switch failed: ' + error.message, 'error');
-            }
-        }
-
-        // Switch tokens in swap
-        function switchTokens() {
-            const fromToken = document.getElementById('fromToken');
-            const toToken = document.getElementById('toToken');
-            
-            const temp = fromToken.value;
-            fromToken.value = toToken.value;
-            toToken.value = temp;
-            
-            // Clear amounts
-            fromAmount.value = '';
-            toAmount.value = '';
-            swapBtn.disabled = true;
-        }
-
-        // Update swap button state
-        function updateSwapButton() {
-            const amount = parseFloat(fromAmount.value);
-            swapBtn.disabled = !amount || amount <= 0;
-            
-            // Simulate conversion rate
-            if (amount > 0) {
-                const converted = amount * 0.98; // Simulate 2% fee
-                toAmount.value = converted.toFixed(6);
-            } else {
-                toAmount.value = '';
-            }
-        }
-
-        // Execute swap
-        async function executeSwap() {
-            try {
-                const amount = parseFloat(fromAmount.value);
-                if (!amount || amount <= 0) {
-                    updateStatus('❌ Enter valid amount', 'error');
-                    return;
-                }
-
-                updateStatus('🔄 Processing swap...', 'info');
-                swapBtn.disabled = true;
-
-                // Simulate swap delay
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                // In real app, you'd call a swap contract here
-                const txHash = "0x" + Math.random().toString(16).substr(2, 64);
-                
-                updateStatus(`✅ Swap completed! TX: ${txHash.substring(0, 10)}...`, 'success');
-                
-                // Reset form
-                fromAmount.value = '';
-                toAmount.value = '';
-                swapBtn.disabled = true;
-
-            } catch (error) {
-                console.error('Swap error:', error);
-                updateStatus('❌ Swap failed: ' + error.message, 'error');
-                swapBtn.disabled = false;
             }
         }
 
         // Disconnect wallet
         async function disconnectWallet() {
             try {
+                debugLog('Disconnecting wallet...');
+                
                 if (walletConnectProvider) {
                     await walletConnectProvider.disconnect();
                 }
             } catch (error) {
                 console.error('Disconnect error:', error);
+                debugLog(`Disconnect error: ${error.message}`);
             } finally {
                 walletConnectProvider = null;
                 ethersProvider = null;
@@ -546,23 +580,31 @@
                 currentChainId = null;
                 
                 walletInfo.style.display = 'none';
-                swapSection.style.display = 'none';
                 testSection.style.display = 'none';
                 qrContainer.style.display = 'none';
-                swapBtn.disabled = true;
+                
+                connectBtn.disabled = false;
+                connectBtn.textContent = '🔗 Connect Trust Wallet';
                 
                 updateStatus('🔌 Wallet disconnected', 'info');
+                updateProviderStatus();
+                debugLog('Wallet disconnected completely');
             }
         }
 
         // Event listeners
         connectBtn.addEventListener('click', connectWallet);
-        swapBtn.addEventListener('click', executeSwap);
 
         // Initialize on load
         document.addEventListener('DOMContentLoaded', function() {
-            updateStatus('✅ Ready! Project ID: f76f0bcabf40fadb066240a1c96eff76', 'success');
-            console.log('🚀 DApp loaded with Project ID: f76f0bcabf40fadb066240a1c96eff76');
+            debugLog('Page loaded');
+            checkLibraries();
+            updateStatus('✅ Ready! Click "Connect Trust Wallet" to start', 'success');
+            
+            // Pre-initialize for faster connection
+            setTimeout(() => {
+                initializeWalletConnect();
+            }, 1000);
         });
     </script>
 </body>
