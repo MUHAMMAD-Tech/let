@@ -83,10 +83,20 @@
       <!-- Sizning mavjud HTML ingizga swap section ni shu bilan almashtiring: -->
 
     <!-- Swap Section -->
-    <section class="section full-height over-hide swapc swap-section">
+  <section class="section full-height over-hide swapc swap-section">
         <div class="container text-center">
-            <h2 class="mb-4">Multi-Chain Swap</h2>
+            <h2 class="mb-4">Multi-Swap</h2>
             <div class="swap-box">
+                <!-- Network Selector -->
+                <div class="form-group">
+                    <label for="networkSelect">Network</label>
+                    <select id="networkSelect" class="form-control">
+                        <option value="ethereum">Ethereum</option>
+                        <option value="bsc">Binance Smart Chain</option>
+                        <option value="solana">Solana</option>
+                    </select>
+                </div>
+                
                 <!-- From Token -->
                 <div class="form-group">
                     <label for="fromTokenSelect">From Token</label>
@@ -105,20 +115,47 @@
                     <input type="number" id="swapAmount" class="form-control" placeholder="Enter amount" step="0.000001">
                 </div>
                 
-                <!-- Connect Wallet -->
-                <button id="connectWalletBtn" class="btn btn-primary">Connect Wallet</button>
+                <!-- Balance Display -->
+                <div id="balanceInfo" class="balance-info"></div>
+                
+                <!-- Wallet Buttons -->
+                <div class="wallet-buttons">
+                    <button id="connectMetaMask" class="btn btn-wallet metamask">
+                        <span class="wallet-icon">🦊</span>
+                        Connect MetaMask
+                    </button>
+                    <button id="connectPhantom" class="btn btn-wallet phantom">
+                        <span class="wallet-icon">👻</span>
+                        Connect Phantom
+                    </button>
+                    <button id="connectTrust" class="btn btn-wallet trust">
+                        <span class="wallet-icon">🔒</span>
+                        Connect Trust Wallet
+                    </button>
+                </div>
                 
                 <!-- Wallet Address Display -->
                 <div id="walletAddress" class="mt-3 mb-3"></div>
                 
-                <!-- Swap Button -->
-                <button id="swapBtn" class="btn btn-success">Swap</button>
+                <!-- Real Swap Button -->
+                <button id="realSwapBtn" class="btn btn-success" disabled>
+                    Execute Real Swap
+                </button>
                 
                 <!-- Status Messages -->
                 <div id="swapStatus" class="mt-3"></div>
+                
+                <!-- Transaction Details -->
+                <div id="transactionDetails" class="transaction-details" style="display: none;">
+                    <h4>Transaction Details</h4>
+                    <div id="txHash" class="tx-info"></div>
+                    <div id="feeInfo" class="fee-info"></div>
+                    <div id="quoteInfo" class="quote-info"></div>
+                </div>
             </div>
         </div>
     </section>
+
 
     <!-- Cursors -->
     <div class='cursor' id="cursor"></div>
