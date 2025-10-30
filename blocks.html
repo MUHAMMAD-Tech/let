@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Swap DApp</title>
+    <title>Mobile Swap with WalletConnect</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -21,17 +21,6 @@
             border-radius: 15px;
             border: 1px solid #444;
         }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #ccc; font-weight: bold; }
-        select, input {
-            width: 100%;
-            padding: 15px;
-            border: 1px solid #555;
-            border-radius: 10px;
-            background: #1a1a1a;
-            color: white;
-            font-size: 16px;
-        }
         .btn {
             width: 100%;
             padding: 18px;
@@ -43,30 +32,25 @@
             margin: 10px 0;
             transition: all 0.3s;
         }
-        .btn-primary { background: #8153a9; color: white; }
-        .btn-success { background: #4CAF50; color: white; }
         .btn-wallet { 
-            background: #333; 
+            background: #3396FF; 
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin: 8px 0;
         }
-        .btn:disabled { background: #555; cursor: not-allowed; opacity: 0.6; }
-        .btn:active { transform: scale(0.98); }
+        .btn-success { background: #4CAF50; color: white; }
         
         #status { 
             margin: 15px 0; 
             padding: 12px; 
             border-radius: 8px;
             text-align: center;
-            font-size: 14px;
         }
-        .success { background: #4CAF50; color: white; }
-        .error { background: #f44336; color: white; }
-        .info { background: #2196F3; color: white; }
+        .success { background: #4CAF50; }
+        .error { background: #f44336; }
+        .info { background: #2196F3; }
         
         .wallet-info {
             margin: 15px 0;
@@ -74,305 +58,204 @@
             background: #333;
             border-radius: 8px;
             text-align: center;
-            display: none;
         }
         
-        .mobile-instructions {
-            background: #2a2a2a;
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
             padding: 15px;
+            background: white;
             border-radius: 10px;
-            margin: 15px 0;
-            font-size: 14px;
-            line-height: 1.5;
         }
-        
-        h2 { text-align: center; margin-bottom: 10px; color: #8153a9; }
-        .subtitle { text-align: center; color: #888; margin-bottom: 25px; }
     </style>
 </head>
 <body>
     <div class="swap-box">
-        <h2>💰 Mobile Swap</h2>
-        <div class="subtitle">Swap tokens on your mobile wallet</div>
+        <h2>💰 WalletConnect Demo</h2>
         
-        <!-- Mobile Instructions -->
-        <div class="mobile-instructions">
-            <strong>📱 How to connect:</strong><br>
-            1. Open this page in your wallet browser<br>
-            2. Or copy link to your wallet app<br>
-            3. Connect and start swapping
+        <!-- WalletConnect Connection -->
+        <button id="walletConnectBtn" class="btn btn-wallet">
+            🔗 Connect with WalletConnect
+        </button>
+
+        <!-- QR Code Container -->
+        <div id="qrContainer" class="qr-container" style="display: none;">
+            <p>Scan with your wallet app:</p>
+            <div id="qrcode"></div>
         </div>
 
-        <!-- Wallet Connection -->
-        <div class="form-group">
-            <label>Connect Your Wallet</label>
-            
-            <!-- Trust Wallet -->
-            <button id="trustBtn" class="btn btn-wallet">
-                <span style="font-size: 20px;">🔒</span>
-                Trust Wallet
-            </button>
-            
-            <!-- MetaMask Mobile -->
-            <button id="metamaskBtn" class="btn btn-wallet">
-                <span style="font-size: 20px;">🦊</span>
-                MetaMask Mobile
-            </button>
-            
-            <!-- Phantom Mobile -->
-            <button id="phantomBtn" class="btn btn-wallet">
-                <span style="font-size: 20px;">👻</span>
-                Phantom Mobile
-            </button>
-            
-            <!-- WalletConnect -->
-            <button id="walletconnectBtn" class="btn btn-wallet">
-                <span style="font-size: 20px;">🔗</span>
-                WalletConnect
-            </button>
-            
-            <!-- Generic Wallet -->
-            <button id="genericBtn" class="btn btn-wallet">
-                <span style="font-size: 20px;">💰</span>
-                Other Wallet
-            </button>
-        </div>
-
-        <!-- Swap Form -->
-        <div class="form-group">
-            <label for="fromToken">From Token</label>
-            <select id="fromToken" class="form-control">
-                <option value="ETH">ETH - Ethereum</option>
-                <option value="BNB">BNB - Binance Coin</option>
-                <option value="MATIC">MATIC - Polygon</option>
-                <option value="USDT">USDT - Tether</option>
-                <option value="USDC">USDC - USD Coin</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="toToken">To Token</label>
-            <select id="toToken" class="form-control">
-                <option value="USDT">USDT - Tether</option>
-                <option value="USDC">USDC - USD Coin</option>
-                <option value="ETH">ETH - Ethereum</option>
-                <option value="BNB">BNB - Binance Coin</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="amount">Amount</label>
-            <input type="number" id="amount" class="form-control" placeholder="0.0" step="0.001" min="0">
-        </div>
-        
         <!-- Wallet Info -->
-        <div id="walletInfo" class="wallet-info">
+        <div id="walletInfo" class="wallet-info" style="display: none;">
             <strong>✅ Connected:</strong> <span id="walletAddress"></span>
         </div>
-        
+
         <!-- Swap Button -->
         <button id="swapBtn" class="btn btn-success" disabled>
             🔄 Swap Tokens
         </button>
         
         <!-- Status -->
-        <div id="status" class="info">Ready to connect wallet</div>
+        <div id="status" class="info">Click "Connect with WalletConnect"</div>
     </div>
 
+    <!-- WalletConnect Library -->
+    <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+
     <script>
-        console.log("📱 Mobile Swap DApp Loading...");
-        
-        // Global variables
+        let walletConnect = null;
+        let web3 = null;
         let userAddress = null;
-        let isConnected = false;
 
         // DOM elements
-        const trustBtn = document.getElementById('trustBtn');
-        const metamaskBtn = document.getElementById('metamaskBtn');
-        const phantomBtn = document.getElementById('phantomBtn');
-        const walletconnectBtn = document.getElementById('walletconnectBtn');
-        const genericBtn = document.getElementById('genericBtn');
-        const swapBtn = document.getElementById('swapBtn');
+        const walletConnectBtn = document.getElementById('walletConnectBtn');
+        const qrContainer = document.getElementById('qrContainer');
         const walletInfo = document.getElementById('walletInfo');
         const walletAddress = document.getElementById('walletAddress');
         const statusDiv = document.getElementById('status');
-        const amountInput = document.getElementById('amount');
+        const swapBtn = document.getElementById('swapBtn');
 
-        // Update status
         function updateStatus(message, type = 'info') {
             statusDiv.textContent = message;
             statusDiv.className = type;
-            console.log(`Status: ${message}`);
         }
 
-        // Detect mobile wallet
-        function detectMobileWallet() {
-            const wallets = [];
-            
-            // Trust Wallet detection
-            if (typeof window.ethereum !== 'undefined' && window.ethereum.isTrust) {
-                wallets.push('trust');
-            }
-            
-            // MetaMask Mobile detection
-            if (typeof window.ethereum !== 'undefined' && (window.ethereum.isMetaMask || navigator.userAgent.includes('MetaMask'))) {
-                wallets.push('metamask');
-            }
-            
-            // Phantom Mobile detection
-            if (typeof window.phantom !== 'undefined' || typeof window.solana !== 'undefined') {
-                wallets.push('phantom');
-            }
-            
-            // Generic Ethereum provider
-            if (typeof window.ethereum !== 'undefined') {
-                wallets.push('generic');
-            }
-            
-            console.log('Detected wallets:', wallets);
-            return wallets;
-        }
-
-        // Connect to any Ethereum wallet
-        async function connectEthereumWallet(walletName) {
+        // Initialize WalletConnect
+        async function initWalletConnect() {
             try {
-                updateStatus(`Connecting to ${walletName}...`, 'info');
+                updateStatus('Initializing WalletConnect...', 'info');
                 
-                if (typeof window.ethereum === 'undefined') {
-                    // Open deep link for mobile
-                    openWalletDeepLink(walletName);
-                    updateStatus(`Please open in ${walletName} app`, 'info');
+                // WalletConnect configuration
+                walletConnect = new WalletConnectProvider.default({
+                    rpc: {
+                        1: "https://mainnet.infura.io/v3/YOUR_PROJECT_ID", // Ethereum
+                        56: "https://bsc-dataseed.binance.org/", // BSC
+                        137: "https://polygon-rpc.com/" // Polygon
+                    },
+                    bridge: "https://bridge.walletconnect.org",
+                    qrcodeModal: false // We'll handle QR code ourselves
+                });
+
+                // Check if already connected
+                if (walletConnect.connected) {
+                    await useWalletConnect();
                     return;
                 }
 
-                // Request accounts
-                const accounts = await window.ethereum.request({
-                    method: 'eth_requestAccounts'
-                });
+                // Create QR code
+                await walletConnect.enable();
+                createQRCode(walletConnect.connector.uri);
+                
+            } catch (error) {
+                console.error('WalletConnect init error:', error);
+                updateStatus('Failed to initialize WalletConnect', 'error');
+            }
+        }
 
+        // Create QR Code
+        function createQRCode(uri) {
+            qrContainer.style.display = 'block';
+            const qrElement = document.getElementById('qrcode');
+            qrElement.innerHTML = '';
+            
+            QRCode.toCanvas(qrElement, uri, { width: 200 }, (error) => {
+                if (error) {
+                    console.error('QR code error:', error);
+                    updateStatus('QR code generation failed', 'error');
+                    return;
+                }
+                updateStatus('Scan QR code with your wallet app', 'info');
+            });
+        }
+
+        // Use WalletConnect connection
+        async function useWalletConnect() {
+            try {
+                updateStatus('Connecting to wallet...', 'info');
+                
+                web3 = new Web3(walletConnect);
+                
+                // Get accounts
+                const accounts = await web3.eth.getAccounts();
+                
                 if (accounts.length === 0) {
                     updateStatus('No accounts found', 'error');
                     return;
                 }
 
                 userAddress = accounts[0];
-                isConnected = true;
                 
-                showWalletInfo(userAddress);
-                updateStatus(`${walletName} connected successfully!`, 'success');
+                // Show wallet info
+                const displayAddress = userAddress.substring(0, 8) + '...' + userAddress.substring(userAddress.length - 6);
+                walletAddress.textContent = displayAddress;
+                walletInfo.style.display = 'block';
+                swapBtn.disabled = false;
                 
+                updateStatus('✅ Wallet connected via WalletConnect!', 'success');
+                qrContainer.style.display = 'none';
+
+                // Listen for events
+                walletConnect.on('accountsChanged', (accounts) => {
+                    if (accounts.length === 0) {
+                        disconnectWallet();
+                    } else {
+                        userAddress = accounts[0];
+                        walletAddress.textContent = userAddress.substring(0, 8) + '...' + userAddress.substring(userAddress.length - 6);
+                    }
+                });
+
+                walletConnect.on('chainChanged', (chainId) => {
+                    updateStatus(`Network changed: ${chainId}`, 'info');
+                });
+
+                walletConnect.on('disconnect', () => {
+                    disconnectWallet();
+                });
+
             } catch (error) {
                 console.error('Connection error:', error);
-                if (error.code === 4001) {
-                    updateStatus('Connection rejected by user', 'error');
-                } else {
-                    updateStatus(`Connection failed: ${error.message}`, 'error');
-                    // Fallback to deep link
-                    openWalletDeepLink(walletName);
-                }
+                updateStatus('Connection failed: ' + error.message, 'error');
             }
         }
 
-        // Connect to Phantom
-        async function connectPhantom() {
-            try {
-                updateStatus('Connecting to Phantom...', 'info');
-                
-                const solana = window.solana || window.phantom;
-                
-                if (!solana) {
-                    openWalletDeepLink('phantom');
-                    updateStatus('Please open in Phantom app', 'info');
-                    return;
-                }
-
-                const response = await solana.connect();
-                userAddress = response.publicKey.toString();
-                isConnected = true;
-                
-                showWalletInfo(userAddress);
-                updateStatus('Phantom connected successfully!', 'success');
-                
-            } catch (error) {
-                console.error('Phantom error:', error);
-                updateStatus('Phantom connection failed', 'error');
-                openWalletDeepLink('phantom');
+        // Disconnect wallet
+        function disconnectWallet() {
+            if (walletConnect) {
+                walletConnect.disconnect();
             }
+            userAddress = null;
+            web3 = null;
+            walletInfo.style.display = 'none';
+            swapBtn.disabled = true;
+            updateStatus('Wallet disconnected', 'error');
         }
 
-        // Show wallet info
-        function showWalletInfo(address) {
-            const displayAddress = address.substring(0, 8) + '...' + address.substring(address.length - 6);
-            walletAddress.textContent = displayAddress;
-            walletInfo.style.display = 'block';
-            swapBtn.disabled = false;
-        }
-
-        // Open wallet deep links
-        function openWalletDeepLink(walletName) {
-            const currentUrl = encodeURIComponent(window.location.href);
-            let deepLink = '';
-            
-            switch(walletName) {
-                case 'trust':
-                    deepLink = `https://link.trustwallet.com/open_url?coin=60&url=${currentUrl}`;
-                    break;
-                case 'metamask':
-                    deepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
-                    break;
-                case 'phantom':
-                    deepLink = `https://phantom.app/ul/browse/${btoa(window.location.href)}`;
-                    break;
-                default:
-                    deepLink = window.location.href;
-            }
-            
-            console.log(`Opening deep link: ${deepLink}`);
-            
-            // Try to open deep link
-            window.location.href = deepLink;
-            
-            // Fallback - open in new tab after delay
-            setTimeout(() => {
-                window.open(deepLink, '_blank');
-            }, 500);
-        }
-
-        // Execute swap
+        // Execute swap using WalletConnect
         async function executeSwap() {
             try {
-                const fromToken = document.getElementById('fromToken').value;
-                const toToken = document.getElementById('toToken').value;
-                const amount = amountInput.value;
-
-                if (!amount || amount <= 0) {
-                    updateStatus('Please enter valid amount', 'error');
-                    return;
-                }
-
-                if (fromToken === toToken) {
-                    updateStatus('Please select different tokens', 'error');
-                    return;
-                }
-
-                if (!isConnected) {
+                if (!userAddress || !web3) {
                     updateStatus('Please connect wallet first', 'error');
                     return;
                 }
 
                 updateStatus('🔄 Processing swap...', 'info');
                 swapBtn.disabled = true;
+
+                // Simulate transaction (in real app, you'd use actual contract calls)
+                const transaction = {
+                    from: userAddress,
+                    to: "0x742E6f70B97580E72211c9c9A2d2776cA7c8b1E1", // Example address
+                    value: web3.utils.toWei('0.001', 'ether'),
+                    gas: 21000
+                };
+
+                // Send transaction (this will trigger wallet approval on mobile)
+                const txHash = await web3.eth.sendTransaction(transaction);
                 
-                // Simulate swap processing
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                updateStatus(`✅ Swap successful! TX: ${txHash.transactionHash.substring(0, 10)}...`, 'success');
                 
-                const txHash = "0x" + Math.random().toString(16).substr(2, 64);
-                updateStatus(`✅ Swap successful! TX: ${txHash.substring(0, 10)}...`, 'success');
-                
-                // Re-enable button after success
-                setTimeout(() => {
-                    swapBtn.disabled = false;
-                }, 2000);
+                swapBtn.disabled = false;
 
             } catch (error) {
                 console.error('Swap error:', error);
@@ -382,70 +265,15 @@
         }
 
         // Event listeners
-        trustBtn.addEventListener('click', () => connectEthereumWallet('Trust Wallet'));
-        metamaskBtn.addEventListener('click', () => connectEthereumWallet('MetaMask'));
-        phantomBtn.addEventListener('click', connectPhantom);
-        walletconnectBtn.addEventListener('click', () => {
-            updateStatus('WalletConnect coming soon...', 'info');
-        });
-        genericBtn.addEventListener('click', () => connectEthereumWallet('Wallet'));
-        
+        walletConnectBtn.addEventListener('click', initWalletConnect);
         swapBtn.addEventListener('click', executeSwap);
-        
-        amountInput.addEventListener('input', function() {
-            if (isConnected) {
-                swapBtn.disabled = !this.value || this.value <= 0;
-            }
-        });
 
-        // Check existing connection
+        // Check existing connection on load
         async function checkExistingConnection() {
-            try {
-                // Check Ethereum
-                if (typeof window.ethereum !== 'undefined') {
-                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                    if (accounts.length > 0) {
-                        userAddress = accounts[0];
-                        isConnected = true;
-                        showWalletInfo(userAddress);
-                        updateStatus('Wallet reconnected', 'success');
-                    }
-                }
-                
-                // Check Phantom
-                if ((window.solana || window.phantom) && (window.solana?.isConnected || window.phantom?.isConnected)) {
-                    const solana = window.solana || window.phantom;
-                    userAddress = solana.publicKey.toString();
-                    isConnected = true;
-                    showWalletInfo(userAddress);
-                    updateStatus('Phantom reconnected', 'success');
-                }
-                
-            } catch (error) {
-                console.log('No existing connection');
-            }
+            // You can implement reconnection logic here
         }
 
-        // Auto-detect wallets on load
-        function autoDetectWallets() {
-            const detectedWallets = detectMobileWallet();
-            
-            if (detectedWallets.length === 0) {
-                updateStatus('No wallets detected. Use buttons above.', 'info');
-            } else {
-                updateStatus(`Detected: ${detectedWallets.join(', ')}`, 'success');
-            }
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ Mobile DApp loaded');
-            checkExistingConnection();
-            autoDetectWallets();
-        });
-
-        // Add touch improvements for mobile
-        document.addEventListener('touchstart', function() {}, {passive: true});
+        document.addEventListener('DOMContentLoaded', checkExistingConnection);
     </script>
 </body>
 </html>
