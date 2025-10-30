@@ -1,43 +1,437 @@
-// swap.js - Faqat swap selection va asosiy funksiyalar
+// wallets.js - Ko'p walletlar uchun qo'llab-quvvatlash
 
-console.log("🚀 Swap System Loading...");
-
-// Tokenlar ro'yxati - to'liq ma'lumotlar bilan
-const TOKENS = {
-    1: { // Ethereum Mainnet
-        'ETH': { symbol: 'ETH', name: 'Ethereum', address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', decimals: 18 },
-        'USDT': { symbol: 'USDT', name: 'Tether USD', address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', decimals: 6 },
-        'USDC': { symbol: 'USDC', name: 'USD Coin', address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', decimals: 6 },
-        'WBTC': { symbol: 'WBTC', name: 'Wrapped Bitcoin', address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', decimals: 8 }
-    },
-    56: { // BSC Mainnet
-        'BNB': { symbol: 'BNB', name: 'Binance Coin', address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', decimals: 18 },
-        'BUSD': { symbol: 'BUSD', name: 'Binance USD', address: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56', decimals: 18 },
-        'USDT': { symbol: 'USDT', name: 'Tether USD', address: '0x55d398326f99059fF775485246999027B3197955', decimals: 18 }
-    },
-    137: { // Polygon
-        'MATIC': { symbol: 'MATIC', name: 'Polygon', address: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', decimals: 18 },
-        'USDT': { symbol: 'USDT', name: 'Tether USD', address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6 }
-    },
-    'solana': { // Solana
-        'SOL': { symbol: 'SOL', name: 'Solana', address: 'So11111111111111111111111111111111111111112', decimals: 9 },
-        'USDC': { symbol: 'USDC', name: 'USD Coin', address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6 },
-        'USDT': { symbol: 'USDT', name: 'Tether USD', address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', decimals: 6 }
+class MultiWalletConnector {
+    constructor() {
+        this.supportedWallets = {
+            'metamask': {
+                name: 'MetaMask',
+                icon: '🦊',
+                check: () => typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask,
+                connect: this.connectMetaMask.bind(this)
+            },
+            'trustwallet': {
+                name: 'Trust Wallet',
+                icon: '🔒',
+                check: () => typeof window.ethereum !== 'undefined' && window.ethereum.isTrust,
+                connect: this.connectTrustWallet.bind(this)
+            },
+            'binance': {
+                name: 'Binance Wallet',
+                icon: '💰',
+                check: () => typeof window.BinanceChain !== 'undefined',
+                connect: this.connectBinanceWallet.bind(this)
+            },
+            'coinbase': {
+                name: 'Coinbase Wallet',
+                icon: '🏦',
+                check: () => typeof window.ethereum !== 'undefined' && window.ethereum.isCoinbaseWallet,
+                connect: this.connectCoinbaseWallet.bind(this)
+            },
+            'phantom': {
+                name: 'Phantom',
+                icon: '👻',
+                check: () => typeof window.phantom !== 'undefined' || typeof window.solana !== 'undefined',
+                connect: this.connectPhantom.bind(this)
+            },
+            'walletconnect': {
+                name: 'WalletConnect',
+                icon: '🔗',
+                check: () => true, // Always available
+                connect: this.connectWalletConnect.bind(this)
+            }
+        };
+        
+        this.detectedWallets = [];
+        this.init();
     }
-};
 
-// Fee sozlamalari - 0.08%
-const FEE_SETTINGS = {
-    feePercentage: 0.08
-};
+    init() {
+        this.detectWallets();
+        this.createWalletModal();
+    }
 
-let provider, signer, userAddress, currentChainId = 1;
+    detectWallets() {
+        this.detectedWallets = [];
+        
+        for (const [key, wallet] of Object.entries(this.supportedWallets)) {
+            if (wallet.check()) {
+                this.detectedWallets.push({
+                    id: key,
+                    ...wallet
+                });
+            }
+        }
+        
+        console.log('🎯 Detected wallets:', this.detectedWallets);
+        return this.detectedWallets;
+    }
 
-// DOM elementlari
-let fromTokenSelect, toTokenSelect, swapAmount, connectWalletBtn, swapBtn, walletAddress, swapStatus;
+    createWalletModal() {
+        // Modal yaratish agar mavjud bo'lmasa
+        if (!document.getElementById('walletModal')) {
+            const modalHTML = `
+                <div id="walletModal" class="wallet-modal" style="display: none;">
+                    <div class="wallet-modal-content">
+                        <div class="wallet-modal-header">
+                            <h3>Connect Wallet</h3>
+                            <span class="wallet-modal-close">&times;</span>
+                        </div>
+                        <div class="wallet-modal-body">
+                            <div id="walletList" class="wallet-list">
+                                <!-- Walletlar bu yerda ko'rsatiladi -->
+                            </div>
+                            <div class="wallet-install-links">
+                                <p>Don't have a wallet?</p>
+                                <div class="install-buttons">
+                                    <a href="https://metamask.io/download/" target="_blank" class="install-btn metamask">
+                                        Install MetaMask
+                                    </a>
+                                    <a href="https://trustwallet.com/download" target="_blank" class="install-btn trustwallet">
+                                        Install Trust Wallet
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            this.setupModalEvents();
+        }
+    }
 
-async function initSwap() {
-    console.log("🔄 Swap initializing...");
+    setupModalEvents() {
+        const modal = document.getElementById('walletModal');
+        const closeBtn = document.querySelector('.wallet-modal-close');
+        
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    showWalletModal() {
+        const modal = document.getElementById('walletModal');
+        const walletList = document.getElementById('walletList');
+        
+        // Wallet listini to'ldirish
+        walletList.innerHTML = '';
+        
+        this.detectedWallets.forEach(wallet => {
+            const walletElement = document.createElement('div');
+            walletElement.className = 'wallet-item';
+            walletElement.innerHTML = `
+                <div class="wallet-icon">${wallet.icon}</div>
+                <div class="wallet-info">
+                    <div class="wallet-name">${wallet.name}</div>
+                    <div class="wallet-status">Available</div>
+                </div>
+                <div class="wallet-connect-btn">Connect</div>
+            `;
+            
+            walletElement.addEventListener('click', () => {
+                this.connectWallet(wallet.id);
+            });
+            
+            walletList.appendChild(walletElement);
+        });
+        
+        // Agar wallet topilmasa
+        if (this.detectedWallets.length === 0) {
+            walletList.innerHTML = `
+                <div class="no-wallets">
+                    <p>No wallets detected</p>
+                    <p>Please install a wallet to continue</p>
+                </div>
+            `;
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    async connectWallet(walletId) {
+        const wallet = this.supportedWallets[walletId];
+        if (!wallet) {
+            console.error('Wallet not found:', walletId);
+            return false;
+        }
+
+        try {
+            updateStatus(`Connecting to ${wallet.name}...`, 'info');
+            const result = await wallet.connect();
+            
+            if (result) {
+                updateStatus(`${wallet.name} connected successfully!`, 'success');
+                document.getElementById('walletModal').style.display = 'none';
+                return true;
+            } else {
+                updateStatus(`Failed to connect ${wallet.name}`, 'error');
+                return false;
+            }
+        } catch (error) {
+            console.error(`Error connecting to ${wallet.name}:`, error);
+            updateStatus(`Connection failed: ${error.message}`, 'error');
+            return false;
+        }
+    }
+
+    // MetaMask connection
+    async connectMetaMask() {
+        try {
+            if (typeof window.ethereum === 'undefined') {
+                throw new Error('MetaMask not installed');
+            }
+
+            const accounts = await window.ethereum.request({
+                method: 'eth_requestAccounts'
+            });
+
+            if (accounts.length === 0) {
+                throw new Error('No accounts found');
+            }
+
+            userAddress = accounts[0];
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
+            const network = await provider.getNetwork();
+            currentChainId = network.chainId;
+
+            // Network o'zgarishini kuzatish
+            window.ethereum.on('chainChanged', (chainId) => {
+                console.log('Chain changed:', chainId);
+                currentChainId = parseInt(chainId, 16);
+                updateUI();
+            });
+
+            // Account o'zgarishini kuzatish
+            window.ethereum.on('accountsChanged', (accounts) => {
+                console.log('Accounts changed:', accounts);
+                if (accounts.length === 0) {
+                    // User disconnected
+                    this.handleDisconnect();
+                } else {
+                    userAddress = accounts[0];
+                    updateUI();
+                }
+            });
+
+            updateUI();
+            return true;
+        } catch (error) {
+            console.error('MetaMask connection error:', error);
+            throw error;
+        }
+    }
+
+    // Trust Wallet connection
+    async connectTrustWallet() {
+        try {
+            if (typeof window.ethereum === 'undefined') {
+                throw new Error('Trust Wallet not installed');
+            }
+
+            // Trust Wallet MetaMask compatible
+            return await this.connectMetaMask();
+        } catch (error) {
+            console.error('Trust Wallet connection error:', error);
+            throw error;
+        }
+    }
+
+    // Binance Wallet connection
+    async connectBinanceWallet() {
+        try {
+            if (typeof window.BinanceChain === 'undefined') {
+                throw new Error('Binance Wallet not installed');
+            }
+
+            const accounts = await window.BinanceChain.request({
+                method: 'eth_requestAccounts'
+            });
+
+            if (accounts.length === 0) {
+                throw new Error('No accounts found');
+            }
+
+            userAddress = accounts[0];
+            provider = new ethers.providers.Web3Provider(window.BinanceChain);
+            signer = provider.getSigner();
+            currentChainId = 56; // BSC mainnet
+
+            updateUI();
+            return true;
+        } catch (error) {
+            console.error('Binance Wallet connection error:', error);
+            throw error;
+        }
+    }
+
+    // Coinbase Wallet connection
+    async connectCoinbaseWallet() {
+        try {
+            if (typeof window.ethereum === 'undefined') {
+                throw new Error('Coinbase Wallet not installed');
+            }
+
+            // Coinbase Wallet MetaMask compatible
+            return await this.connectMetaMask();
+        } catch (error) {
+            console.error('Coinbase Wallet connection error:', error);
+            throw error;
+        }
+    }
+
+    // Phantom connection
+    async connectPhantom() {
+        try {
+            const solana = window.solana || window.phantom;
+            if (!solana) {
+                throw new Error('Phantom not installed');
+            }
+
+            const response = await solana.connect();
+            userAddress = response.publicKey.toString();
+            provider = { isSolana: true, connection: solana };
+            signer = solana;
+            currentChainId = 'solana';
+
+            // Disconnect event
+            solana.on('disconnect', () => {
+                this.handleDisconnect();
+            });
+
+            updateUI();
+            return true;
+        } catch (error) {
+            console.error('Phantom connection error:', error);
+            throw error;
+        }
+    }
+
+    // WalletConnect connection (soddalashtirilgan versiya)
+    async connectWalletConnect() {
+        try {
+            // Bu yerda WalletConnect integratsiyasi bo'lishi kerak
+            // Hozircha demo versiya
+            updateStatus('WalletConnect coming soon...', 'info');
+            return false;
+            
+            // Haqiqiy implementatsiya:
+            // 1. WalletConnect provider yaratish
+            // 2. QR code ko'rsatish
+            // 3. User connection ni tasdiqlashini kutish
+        } catch (error) {
+            console.error('WalletConnect error:', error);
+            throw error;
+        }
+    }
+
+    handleDisconnect() {
+        userAddress = null;
+        provider = null;
+        signer = null;
+        
+        if (connectWalletBtn) {
+            connectWalletBtn.textContent = "Connect Wallet";
+            connectWalletBtn.disabled = false;
+        }
+        
+        if (walletAddress) {
+            walletAddress.textContent = '';
+        }
+        
+        updateStatus('Wallet disconnected', 'info');
+    }
+
+    // Wallet ni tekshirish
+    checkWalletConnection() {
+        return !!userAddress;
+    }
+
+    // Network ni o'zgartirish
+    async switchNetwork(chainId) {
+        try {
+            if (typeof window.ethereum === 'undefined') {
+                throw new Error('Wallet not connected');
+            }
+
+            const chainIdHex = '0x' + chainId.toString(16);
+            
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: chainIdHex }],
+                });
+            } catch (switchError) {
+                // Agar network mavjud bo'lmasa, qo'shish
+                if (switchError.code === 4902) {
+                    await this.addNetwork(chainId);
+                } else {
+                    throw switchError;
+                }
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Network switch error:', error);
+            throw error;
+        }
+    }
+
+    // Yangi network qo'shish
+    async addNetwork(chainId) {
+        const networkConfigs = {
+            56: { // BSC
+                chainId: '0x38',
+                chainName: 'Binance Smart Chain',
+                nativeCurrency: {
+                    name: 'BNB',
+                    symbol: 'BNB',
+                    decimals: 18
+                },
+                rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                blockExplorerUrls: ['https://bscscan.com/']
+            },
+            137: { // Polygon
+                chainId: '0x89',
+                chainName: 'Polygon Mainnet',
+                nativeCurrency: {
+                    name: 'MATIC',
+                    symbol: 'MATIC',
+                    decimals: 18
+                },
+                rpcUrls: ['https://polygon-rpc.com/'],
+                blockExplorerUrls: ['https://polygonscan.com/']
+            }
+        };
+
+        const config = networkConfigs[chainId];
+        if (!config) {
+            throw new Error(`Network config not found for chainId: ${chainId}`);
+        }
+
+        await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [config],
+        });
+    }
+}
+
+// Global instance
+let walletConnector;
+
+// Yangi swap.js funksiyalari
+async function initSwapWithWallets() {
+    console.log("🔄 Swap with multi-wallet support initializing...");
+    
+    // Wallet connector ni ishga tushirish
+    walletConnector = new MultiWalletConnector();
     
     // DOM elementlarni topish
     fromTokenSelect = document.getElementById('fromTokenSelect');
@@ -53,388 +447,332 @@ async function initSwap() {
         return;
     }
 
-    populateTokenSelects();
-    setupEventListeners();
-    checkWalletConnection();
-
-    console.log("✅ Swap initialized");
+    // Event listenerlarni o'rnatish
+    setupEventListenersWithWallets();
+    
+    // Avvalgi connection ni tekshirish
+    checkExistingConnection();
+    
+    console.log("✅ Swap with multi-wallet support initialized");
 }
 
-function populateTokenSelects() {
-    console.log("🔄 Populating token selects...");
-    
-    fromTokenSelect.innerHTML = '';
-    toTokenSelect.innerHTML = '';
-
-    const currentTokens = TOKENS[currentChainId] || TOKENS[1];
-    const tokenSymbols = Object.keys(currentTokens);
-    
-    console.log("Available tokens:", tokenSymbols);
-    
-    if (tokenSymbols.length === 0) {
-        console.error("❌ No tokens found for chain:", currentChainId);
-        return;
-    }
-    
-    // From token select
-    tokenSymbols.forEach(symbol => {
-        const token = currentTokens[symbol];
-        const option = document.createElement('option');
-        option.value = symbol;
-        option.textContent = `${token.symbol} - ${token.name}`;
-        option.className = 'token-option';
-        fromTokenSelect.appendChild(option);
-    });
-    
-    // To token select
-    tokenSymbols.forEach(symbol => {
-        const token = currentTokens[symbol];
-        const option = document.createElement('option');
-        option.value = symbol;
-        option.textContent = `${token.symbol} - ${token.name}`;
-        option.className = 'token-option';
-        toTokenSelect.appendChild(option);
-    });
-    
-    // Default values - bir xil token bo'lmasligi uchun
-    if (tokenSymbols.length > 1) {
-        toTokenSelect.value = tokenSymbols[1];
-    }
-    
-    console.log("✅ Token selects populated");
-    createFeeDisplay();
-}
-
-function setupEventListeners() {
-    console.log("🔄 Setting up event listeners...");
+function setupEventListenersWithWallets() {
+    console.log("🔄 Setting up event listeners with wallet support...");
     
     if (connectWalletBtn) {
-        connectWalletBtn.addEventListener('click', connectWallet);
-        console.log("✅ Connect wallet listener added");
+        connectWalletBtn.addEventListener('click', () => {
+            walletConnector.showWalletModal();
+        });
     }
     
     if (swapBtn) {
         swapBtn.addEventListener('click', executeRealSwap);
-        console.log("✅ Swap button listener added");
     }
 
     if (fromTokenSelect && toTokenSelect) {
         fromTokenSelect.addEventListener('change', updateFeeDisplay);
         toTokenSelect.addEventListener('change', updateFeeDisplay);
-        console.log("✅ Token select listeners added");
     }
 
     if (swapAmount) {
         swapAmount.addEventListener('input', updateFeeDisplay);
-        console.log("✅ Amount input listener added");
     }
 }
 
-async function checkWalletConnection() {
-    console.log("🔄 Checking wallet connection...");
-    
-    // Avval Solana ni tekshiramiz
-    if (getSolanaProvider()) {
-        try {
-            const solana = getSolanaProvider();
-            if (solana.isConnected) {
-                const response = await solana.connect({ onlyIfTrusted: true });
-                userAddress = response.publicKey.toString();
-                provider = { isSolana: true, connection: solana };
-                signer = solana;
-                currentChainId = 'solana';
-                updateUI();
-                console.log("✅ Solana wallet auto-connected");
-                return;
-            }
-        } catch (error) {
-            console.log("❌ Solana auto-connect failed:", error.message);
-        }
-    }
-
-    // Keyin Ethereum ni tekshiramiz
-    if (typeof window.ethereum !== 'undefined') {
-        try {
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            if (accounts.length > 0) {
-                userAddress = accounts[0];
-                provider = new ethers.providers.Web3Provider(window.ethereum);
-                signer = provider.getSigner();
-                const network = await provider.getNetwork();
-                currentChainId = network.chainId;
-                updateUI();
-                console.log("✅ EVM wallet auto-connected");
-            }
-        } catch (error) {
-            console.log("❌ EVM auto-connect failed:", error.message);
-        }
-    }
-    
-    console.log("ℹ️ No wallet connected");
-}
-
-async function connectWallet() {
-    try {
-        updateStatus("Connecting wallet...", "info");
-        console.log("🔄 Connecting wallet...");
-
-        // Avval Solana ni tekshiramiz
-        if (getSolanaProvider()) {
-            const solanaConnected = await connectSolanaWallet();
-            if (solanaConnected) {
-                console.log("✅ Solana wallet connected successfully");
-                return;
-            }
-        }
-
-        // Keyin Ethereum ni tekshiramiz
-        if (typeof window.ethereum !== 'undefined') {
-            console.log("🔄 Connecting to EVM wallet...");
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            userAddress = accounts[0];
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            signer = provider.getSigner();
-            const network = await provider.getNetwork();
-            currentChainId = network.chainId;
-            updateUI();
-            updateStatus("EVM wallet connected!", "success");
-            console.log("✅ EVM wallet connected successfully");
-        } else {
-            updateStatus("Please install MetaMask or Phantom!", "error");
-            console.log("❌ No wallet found");
-        }
-        
-    } catch (error) {
-        console.error("❌ Wallet connection error:", error);
-        updateStatus("Connection failed: " + error.message, "error");
-    }
-}
-
-function getSolanaProvider() {
-    if (window.solana || window.phantom) {
-        return window.solana || window.phantom;
-    }
-    return null;
-}
-
-async function connectSolanaWallet() {
-    try {
-        const solana = getSolanaProvider();
-        if (!solana) {
-            console.log("❌ Solana provider not found");
-            return false;
-        }
-        
-        console.log("🔄 Connecting to Solana wallet...");
-        const response = await solana.connect();
-        userAddress = response.publicKey.toString();
-        provider = { isSolana: true, connection: solana };
-        signer = solana;
-        currentChainId = 'solana';
+function checkExistingConnection() {
+    // LocalStorage dan oldingi connection ni tekshirish
+    const savedConnection = localStorage.getItem('walletConnection');
+    if (savedConnection) {
+        const connection = JSON.parse(savedConnection);
+        userAddress = connection.address;
+        currentChainId = connection.chainId;
         updateUI();
-        updateStatus("Solana wallet connected!", "success");
-        return true;
-    } catch (error) {
-        console.error("❌ Solana connection error:", error);
-        return false;
     }
 }
 
-function updateUI() {
-    console.log("🔄 Updating UI...");
-    
-    if (walletAddress) {
-        const displayAddress = userAddress.length > 20 ? 
-            `${userAddress.substring(0, 10)}...${userAddress.substring(userAddress.length - 8)}` : 
-            userAddress;
-        walletAddress.textContent = `Connected (${getChainName(currentChainId)}): ${displayAddress}`;
-        console.log("✅ Wallet address updated");
+// Yangi CSS (wallets.css):
+const walletStyles = `
+/* Wallet Modal Styles */
+.wallet-modal {
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+}
+
+.wallet-modal-content {
+    background: rgba(25, 25, 35, 0.95);
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.light .wallet-modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.wallet-modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+body.light .wallet-modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.wallet-modal-header h3 {
+    margin: 0;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+}
+
+body.light .wallet-modal-header h3 {
+    color: #1f2029;
+}
+
+.wallet-modal-close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.wallet-modal-close:hover {
+    color: #fff;
+}
+
+body.light .wallet-modal-close:hover {
+    color: #1f2029;
+}
+
+.wallet-modal-body {
+    padding: 1.5rem;
+}
+
+/* Wallet List Styles */
+.wallet-list {
+    margin-bottom: 1.5rem;
+}
+
+.wallet-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+body.light .wallet-item {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.wallet-item:hover {
+    background: rgba(129, 103, 169, 0.1);
+    border-color: rgba(129, 103, 169, 0.3);
+    transform: translateY(-2px);
+}
+
+.wallet-icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    width: 40px;
+    text-align: center;
+}
+
+.wallet-info {
+    flex: 1;
+}
+
+.wallet-name {
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.25rem;
+    font-family: 'Montserrat', sans-serif;
+}
+
+body.light .wallet-name {
+    color: #1f2029;
+}
+
+.wallet-status {
+    font-size: 0.8rem;
+    color: #4CAF50;
+}
+
+.wallet-connect-btn {
+    background: rgba(129, 103, 169, 0.2);
+    color: #8167a9;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.wallet-item:hover .wallet-connect-btn {
+    background: #8167a9;
+    color: #fff;
+}
+
+/* No Wallets State */
+.no-wallets {
+    text-align: center;
+    padding: 2rem;
+    color: #c4c3ca;
+}
+
+body.light .no-wallets {
+    color: #666;
+}
+
+/* Install Links */
+.wallet-install-links {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1.5rem;
+}
+
+body.light .wallet-install-links {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.wallet-install-links p {
+    margin-bottom: 1rem;
+    color: #c4c3ca;
+    text-align: center;
+}
+
+body.light .wallet-install-links p {
+    color: #666;
+}
+
+.install-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.install-btn {
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+body.light .install-btn {
+    background: rgba(0, 0, 0, 0.03);
+    color: #1f2029;
+}
+
+.install-btn:hover {
+    background: rgba(129, 103, 169, 0.1);
+    border-color: rgba(129, 103, 169, 0.3);
+    transform: translateY(-1px);
+}
+
+.install-btn.metamask {
+    background: linear-gradient(135deg, #f6851b, #e2761b);
+    color: white;
+}
+
+.install-btn.trustwallet {
+    background: linear-gradient(135deg, #3375bb, #2a5f9e);
+    color: white;
+}
+
+/* Network Indicator */
+.network-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-left: 1rem;
+}
+
+body.light .network-indicator {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.network-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+}
+
+.network-dot.offline {
+    background: #f44336;
+}
+
+/* Disconnect Button */
+.disconnect-btn {
+    background: rgba(244, 67, 54, 0.1);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 1rem;
+}
+
+.disconnect-btn:hover {
+    background: rgba(244, 67, 54, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .wallet-modal-content {
+        margin: 10% auto;
+        width: 95%;
     }
     
-    if (connectWalletBtn) {
-        connectWalletBtn.textContent = "Connected";
-        connectWalletBtn.disabled = true;
-        console.log("✅ Connect button updated");
+    .wallet-item {
+        padding: 0.875rem;
     }
     
-    populateTokenSelects();
-    updateFeeDisplay();
-    console.log("✅ UI updated successfully");
-}
-
-function getChainName(chainId) {
-    const chains = {
-        1: 'Ethereum',
-        56: 'BSC',
-        137: 'Polygon',
-        'solana': 'Solana'
-    };
-    return chains[chainId] || 'Unknown';
-}
-
-function calculateFee(amount) {
-    const feeAmount = (amount * FEE_SETTINGS.feePercentage) / 100;
-    const userAmount = amount - feeAmount;
-    
-    return { feeAmount, userAmount, feePercentage: FEE_SETTINGS.feePercentage };
-}
-
-function createFeeDisplay() {
-    if (document.getElementById('feeInfo')) return;
-    
-    const feeInfo = document.createElement('div');
-    feeInfo.id = 'feeInfo';
-    feeInfo.className = 'fee-info';
-    feeInfo.innerHTML = `<small>Enter amount to see fee details</small>`;
-    
-    if (swapAmount && swapAmount.parentNode) {
-        swapAmount.parentNode.insertBefore(feeInfo, swapAmount.nextSibling);
+    .wallet-icon {
+        font-size: 1.25rem;
+        margin-right: 0.75rem;
     }
 }
+`;
 
-function updateFeeDisplay() {
-    const amount = parseFloat(swapAmount.value);
-    const feeInfo = document.getElementById('feeInfo');
-    
-    if (!feeInfo) return;
-    
-    if (amount && amount > 0) {
-        const feeCalculation = calculateFee(amount);
-        const fromToken = fromTokenSelect.value;
-        
-        feeInfo.innerHTML = `
-            <div class="fee-details">
-                <div class="fee-row">
-                    <span>Service Fee (${feeCalculation.feePercentage}%):</span>
-                    <span class="fee-amount">${feeCalculation.feeAmount.toFixed(6)} ${fromToken}</span>
-                </div>
-                <div class="fee-row">
-                    <span>You Will Receive:</span>
-                    <span class="receive-amount">${feeCalculation.userAmount.toFixed(6)} ${fromToken}</span>
-                </div>
-                <div class="fee-usd">≈ $${feeCalculation.feeAmount.toFixed(2)} fee</div>
-            </div>
-        `;
-    } else {
-        feeInfo.innerHTML = `<small>Enter amount to see fee details</small>`;
-    }
-}
-
-async function executeRealSwap() {
-    try {
-        if (!userAddress) {
-            updateStatus("Please connect wallet first!", "error");
-            return;
-        }
-
-        const amount = parseFloat(swapAmount.value);
-        if (!amount || amount <= 0) {
-            updateStatus("Please enter valid amount", "error");
-            return;
-        }
-
-        const fromTokenSymbol = fromTokenSelect.value;
-        const toTokenSymbol = toTokenSelect.value;
-
-        if (fromTokenSymbol === toTokenSymbol) {
-            updateStatus("Please select different tokens", "error");
-            return;
-        }
-
-        console.log(`🔄 Swapping ${amount} ${fromTokenSymbol} to ${toTokenSymbol}`);
-        updateStatus("Getting best price...", "info");
-
-        // Demo quote - haqiqiy implementatsiya uchun DEX API lariga ulaning
-        const demoQuote = {
-            amountOut: (amount * 0.99).toFixed(6),
-            priceImpact: "0.1"
-        };
-        
-        // Fee ni hisoblash
-        const feeCalculation = calculateFee(amount);
-        
-        const confirmSwap = confirm(
-            `💰 Swap Details (${getChainName(currentChainId)}):\n\n` +
-            `From: ${amount} ${fromTokenSymbol}\n` +
-            `To: ≈ ${demoQuote.amountOut} ${toTokenSymbol}\n` +
-            `Service Fee: ${feeCalculation.feePercentage}% (${feeCalculation.feeAmount.toFixed(6)} ${fromTokenSymbol})\n` +
-            `You Receive: ${feeCalculation.userAmount.toFixed(6)} ${fromTokenSymbol}\n\n` +
-            `Continue with swap?`
-        );
-
-        if (!confirmSwap) {
-            updateStatus("Swap cancelled", "info");
-            return;
-        }
-
-        updateStatus("Executing swap...", "info");
-
-        // Demo transaction - haqiqiy implementatsiya uchun DEX API lariga ulaning
-        const txHash = "0x" + Math.random().toString(16).substr(2, 64);
-        
-        // Kuting (simulate processing)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        updateStatus(`✅ Swap successful! TX: ${txHash.substring(0, 10)}...`, "success");
-        
-        // Fee ni track qilish
-        trackFeeCollection(feeCalculation.feeAmount, fromTokenSymbol, txHash, {
-            chainId: currentChainId
-        });
-
-    } catch (error) {
-        console.error("❌ Swap error:", error);
-        updateStatus("Swap failed: " + error.message, "error");
-    }
-}
-
-function trackFeeCollection(feeAmount, token, txHash, metadata) {
-    const feeData = {
-        amount: feeAmount,
-        token: token,
-        txHash: txHash,
-        timestamp: new Date().toISOString(),
-        userWallet: userAddress,
-        metadata: metadata
-    };
-    
-    console.log("💰 Fee Collected:", feeData);
-    
-    try {
-        const existingFees = JSON.parse(localStorage.getItem('collectedFees') || '[]');
-        existingFees.push(feeData);
-        localStorage.setItem('collectedFees', JSON.stringify(existingFees));
-    } catch (e) {
-        console.log("❌ Failed to save fee data");
-    }
-}
-
-function updateStatus(message, type = "info") {
-    if (!swapStatus) return;
-    
-    swapStatus.textContent = message;
-    swapStatus.className = 'mt-3 status-message';
-    
-    // Remove existing status classes
-    swapStatus.classList.remove('status-success', 'status-error', 'status-info');
-    
-    switch (type) {
-        case "success":
-            swapStatus.classList.add('status-success');
-            break;
-        case "error":
-            swapStatus.classList.add('status-error');
-            break;
-        case "info":
-            swapStatus.classList.add('status-info');
-            break;
-    }
-}
+// CSS ni qo'shish
+const styleSheet = document.createElement('style');
+styleSheet.textContent = walletStyles;
+document.head.appendChild(styleSheet);
 
 // DOM ready
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("📄 DOM fully loaded");
-    setTimeout(initSwap, 500);
+    console.log("📄 DOM fully loaded with wallet support");
+    setTimeout(initSwapWithWallets, 500);
 });
-
-console.log("🔄 Swap system ready with 0.08% fee");
