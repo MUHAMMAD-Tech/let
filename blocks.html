@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trust Wallet - Multiple CDN Fallbacks</title>
+    <title>Trust Wallet - Simple v1</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -11,10 +11,6 @@
             color: white;
             padding: 20px;
             text-align: center;
-        }
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
         }
         .btn {
             padding: 15px 30px;
@@ -25,164 +21,87 @@
             cursor: pointer;
             background: #337CCF;
             color: white;
-            width: 100%;
         }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         #status { 
-            margin: 20px 0; 
+            margin: 20px; 
             padding: 15px; 
             border-radius: 8px;
             background: #333;
         }
-        .library-status {
-            background: #2d2d2d;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            text-align: left;
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>🔗 Trust Wallet Connect</h2>
-        <p>Multiple CDN Fallbacks</p>
-        
-        <div class="library-status">
-            <h4>📚 Library Loading Status:</h4>
-            <div id="libraryStatus">Loading libraries...</div>
-        </div>
-        
-        <button id="connectBtn" class="btn" disabled>Loading Libraries...</button>
-        <div id="qrcode" style="margin: 20px;"></div>
-        <div id="status">Initializing...</div>
-    </div>
+    <h2>🔗 Trust Wallet Connect (Simple v1)</h2>
+    <button id="connectBtn" class="btn">Connect Wallet</button>
+    <div id="qrcode"></div>
+    <div id="status">Click connect to start</div>
 
-    <!-- CDN 1: jsDelivr -->
-    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.9.0/dist/umd/index.min.js" onload="libraryLoaded('wc', 'jsDelivr')" onerror="tryCDN2()"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js" onload="libraryLoaded('ethers', 'jsDelivr')"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" onload="libraryLoaded('qrcode', 'jsDelivr')"></script>
+    <!-- WalletConnect v1 - More reliable -->
+    <script src="https://unpkg.com/@walletconnect/client@1.8.0/dist/umd/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
     <script>
-        let provider = null;
-        let loadedLibraries = {
-            wc: false,
-            ethers: false,
-            qrcode: false
-        };
-        let currentCDN = 'jsDelivr';
+        let connector = null;
 
-        function updateLibraryStatus() {
-            const status = document.getElementById('libraryStatus');
-            const wcStatus = loadedLibraries.wc ? '✅' : '❌';
-            const ethersStatus = loadedLibraries.ethers ? '✅' : '❌';
-            const qrStatus = loadedLibraries.qrcode ? '✅' : '❌';
-            
-            status.innerHTML = `
-                WalletConnect: ${wcStatus} (${currentCDN})<br>
-                Ethers.js: ${ethersStatus}<br>
-                QR Code: ${qrStatus}
-            `;
-
-            // Enable button if all libraries are loaded
-            if (loadedLibraries.wc && loadedLibraries.ethers && loadedLibraries.qrcode) {
-                document.getElementById('connectBtn').disabled = false;
-                document.getElementById('connectBtn').textContent = '🔗 Connect Trust Wallet';
-                updateStatus('✅ All libraries loaded! Ready to connect.');
-                initializeWalletConnect();
-            }
-        }
-
-        function libraryLoaded(lib, cdn) {
-            console.log(`${lib} loaded from ${cdn}`);
-            loadedLibraries[lib] = true;
-            currentCDN = cdn;
-            updateLibraryStatus();
-        }
-
-        function tryCDN2() {
-            console.log('CDN 1 failed, trying CDN 2...');
-            // Remove any existing script
-            const existingScript = document.querySelector('script[src*="walletconnect"]');
-            if (existingScript) existingScript.remove();
-            
-            // Try CDN 2: unpkg
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/@walletconnect/ethereum-provider@2.9.0/dist/umd/index.min.js';
-            script.onload = () => libraryLoaded('wc', 'unpkg');
-            script.onerror = tryCDN3;
-            document.head.appendChild(script);
-        }
-
-        function tryCDN3() {
-            console.log('CDN 2 failed, trying CDN 3...');
-            updateStatus('🔄 Trying alternative CDN sources...');
-            
-            // Try CDN 3: CDNJS (different build)
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/walletconnect/1.8.0/walletconnect-umd.min.js';
-            script.onload = () => {
-                console.log('Loaded WalletConnect v1 as fallback');
-                loadedLibraries.wc = true;
-                currentCDN = 'cdnjs-v1';
-                updateLibraryStatus();
-            };
-            script.onerror = () => {
-                updateStatus('❌ All CDNs failed. Please check your internet connection.', true);
-            };
-            document.head.appendChild(script);
-        }
-
-        function updateStatus(message, isError = false) {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.style.background = isError ? '#d32f2f' : '#2d2d2d';
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
             console.log(message);
         }
 
-        async function initializeWalletConnect() {
+        async function connectWallet() {
             try {
-                updateStatus('🚀 Initializing WalletConnect...');
+                updateStatus('🔄 Creating connection...');
                 
-                // Check which version of WalletConnect we have
-                if (typeof EthereumProvider !== 'undefined') {
-                    // WalletConnect v2
-                    provider = await EthereumProvider.init({
-                        projectId: "f76f0bcabf40fadb066240a1c96eff76",
-                        chains: [1],
-                        showQrModal: false,
-                        methods: ["eth_sendTransaction", "personal_sign"],
-                        events: ["chainChanged", "accountsChanged"]
-                    });
-                } else if (typeof WalletConnect !== 'undefined') {
-                    // WalletConnect v1 (fallback)
-                    updateStatus('⚠️ Using WalletConnect v1 (fallback)');
-                    provider = new WalletConnect({
-                        bridge: "https://bridge.walletconnect.org",
-                        qrcodeModal: false
-                    });
-                } else {
-                    throw new Error('No WalletConnect provider available');
+                // Create WalletConnect v1 connector
+                connector = new WalletConnect({
+                    bridge: "https://bridge.walletconnect.org", // Official bridge
+                    qrcodeModal: false
+                });
+
+                // Check if connection is already established
+                if (!connector.connected) {
+                    // Create new session
+                    updateStatus('📱 Generating QR code...');
+                    await connector.createSession();
+
+                    // Display QR Code
+                    showQRCode(connector.uri);
                 }
 
-                // Set up event listeners
-                if (provider.on) {
-                    provider.on("display_uri", (uri) => {
-                        showQRCode(uri);
-                        updateStatus('📱 Scan QR code with Trust Wallet');
-                    });
+                // Subscribe to connection events
+                connector.on("connect", (error, payload) => {
+                    if (error) {
+                        throw error;
+                    }
 
-                    provider.on("connect", () => {
-                        updateStatus('✅ Connected successfully!');
-                        document.getElementById('connectBtn').textContent = '✅ Connected';
-                        document.getElementById('connectBtn').disabled = true;
-                    });
-                }
+                    // Get connected account
+                    const { accounts } = payload.params[0];
+                    updateStatus(`✅ Connected: ${accounts[0].substring(0, 10)}...`);
+                    document.getElementById('connectBtn').textContent = '✅ Connected';
+                    document.getElementById('connectBtn').disabled = true;
+                    document.getElementById('qrcode').innerHTML = '';
+                });
 
-                updateStatus('✅ WalletConnect initialized! Click connect.');
+                connector.on("session_update", (error, payload) => {
+                    if (error) {
+                        throw error;
+                    }
+                    const { accounts } = payload.params[0];
+                    updateStatus(`🔄 Session updated: ${accounts[0].substring(0, 10)}...`);
+                });
+
+                connector.on("disconnect", (error, payload) => {
+                    if (error) {
+                        throw error;
+                    }
+                    updateStatus('🔌 Disconnected');
+                    document.getElementById('connectBtn').textContent = 'Connect Wallet';
+                    document.getElementById('connectBtn').disabled = false;
+                });
 
             } catch (error) {
-                updateStatus(`❌ Initialization failed: ${error.message}`, true);
+                console.error('Connection error:', error);
+                updateStatus(`❌ Error: ${error.message}`);
             }
         }
 
@@ -192,40 +111,38 @@
             QRCode.toCanvas(qrElement, uri, { width: 200 }, (err) => {
                 if (err) {
                     console.error('QR error:', err);
-                    updateStatus('❌ QR code generation failed', true);
+                    updateStatus('❌ QR code failed');
+                } else {
+                    updateStatus('📱 Scan QR code with Trust Wallet');
+                console.log('QR Code URI:', uri);
+                // Also log URI for manual copy-paste
+                    updateStatus(`📱 Scan QR or copy this in Trust Wallet: ${uri.substring(0, 50)}...`);
                 }
             });
         }
 
-        async function connect() {
+        document.getElementById('connectBtn').addEventListener('click', connectWallet);
+
+        // Check for existing connection on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Try to initialize with existing connection
             try {
-                updateStatus('🔗 Connecting...');
-                
-                if (!provider) {
-                    await initializeWalletConnect();
-                }
+                const existingConnector = new WalletConnect({
+                    bridge: "https://bridge.walletconnect.org",
+                    qrcodeModal: false
+                });
 
-                if (provider.connect) {
-                    await provider.connect();
-                } else if (provider.enable) {
-                    await provider.enable();
-                } else {
-                    throw new Error('No connect method available');
+                if (existingConnector.connected) {
+                    const accounts = existingConnector.accounts;
+                    updateStatus(`✅ Reconnected: ${accounts[0].substring(0, 10)}...`);
+                    document.getElementById('connectBtn').textContent = '✅ Connected';
+                    document.getElementById('connectBtn').disabled = true;
+                    connector = existingConnector;
                 }
-
             } catch (error) {
-                updateStatus(`❌ Connection failed: ${error.message}`, true);
+                console.log('No existing connection');
             }
-        }
-
-        document.getElementById('connectBtn').addEventListener('click', connect);
-
-        // Timeout check
-        setTimeout(() => {
-            if (!loadedLibraries.wc) {
-                updateStatus('⚠️ WalletConnect loading slowly. Still trying...');
-            }
-        }, 5000);
+        });
     </script>
 </body>
 </html>
