@@ -1,485 +1,142 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Complete Swap DApp (Fixed)</title>
-    <style>
-        *{box-sizing:border-box}
-        body{font-family:Arial,Helvetica,sans-serif;background:#1a1a1a;color:#fff;padding:20px;min-height:100vh}
-        .container{max-width:700px;margin:0 auto}
-        .card{background:#2d2d2d;padding:22px;border-radius:14px;border:1px solid #444;margin-bottom:18px}
-        .btn{width:100%;padding:14px;border:none;border-radius:10px;font-weight:700;cursor:pointer;margin:8px 0}
-        .btn-wallet{background:#3396FF;color:#fff}
-        .btn-metamask{background:#F6851B;color:#fff}
-        .btn-success{background:#4CAF50;color:#fff}
-        .btn-danger{background:#f44336;color:#fff}
-        select,input{width:100%;padding:12px;border-radius:8px;border:1px solid #555;background:#121212;color:#fff;margin-bottom:12px}
-        label{color:#ccc;font-size:14px;margin-bottom:6px;display:block}
-        .wallet-info{display:none;background:#333;padding:12px;border-radius:8px;text-align:center;margin-bottom:12px}
-        #status{padding:12px;border-radius:8px;text-align:center;margin-top:10px}
-        .info{background:#2196F3}
-        .success{background:#4CAF50}
-        .error{background:#f44336}
-        .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    </style>
+  <meta charset="utf-8" />
+  <title>Open MetaMask Mobile / WalletConnect demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:Arial,sans-serif;background:#0f1724;color:#e6eef8;padding:20px}
+    .card{background:#0b1220;padding:18px;border-radius:10px;border:1px solid #18232f;max-width:720px;margin:12px auto}
+    button{padding:12px 16px;border-radius:8px;border:0;background:#06b6d4;color:#042027;font-weight:700;cursor:pointer;margin:8px}
+    .danger{background:#ef4444;color:white}
+    p{color:#9fb0c8}
+    code{background:#071122;padding:4px 6px;border-radius:6px;color:#9fe2d8}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <h2 style="color:#3396FF;text-align:center">💰 Universal Swap DApp (Fixed)</h2>
-            <p style="text-align:center;color:#aaa">MetaMask / WalletConnect — ETH & ERC20 swap (Uniswap V2)</p>
+  <div class="card">
+    <h2>Open MetaMask Mobile / WalletConnect</h2>
+    <p>Bu sahifa MetaMask mobil ilovasini yoki boshqa WalletConnect hamyonlarini ochish uchun misollar beradi.</p>
 
-            <div class="grid" style="margin:12px 0">
-                <button id="metamaskBtn" class="btn btn-metamask">🦊 MetaMask</button>
-                <button id="walletConnectBtn" class="btn btn-wallet">🔗 WalletConnect</button>
-            </div>
-
-            <div id="walletInfo" class="wallet-info">
-                <strong>✅ Connected:</strong> <span id="walletAddress">—</span>
-                <div style="margin-top:8px">
-                    <button id="disconnectBtn" class="btn btn-danger" style="width:auto;padding:8px 12px">Disconnect</button>
-                </div>
-            </div>
-
-            <div style="margin-top:8px">
-                <label>From Token</label>
-                <select id="fromToken">
-                    <option value="ETH">ETH</option>
-                    <option value="USDT">USDT</option>
-                    <option value="USDC">USDC</option>
-                </select>
-
-                <label>To Token</label>
-                <select id="toToken">
-                    <option value="USDT">USDT</option>
-                    <option value="USDC">USDC</option>
-                    <option value="ETH">ETH</option>
-                </select>
-
-                <label>Amount (units of From Token)</label>
-                <input id="amount" type="number" step="0.0001" min="0" placeholder="e.g. 0.01" />
-
-                <button id="swapBtn" class="btn btn-success" disabled>🔄 Swap Tokens</button>
-
-                <div id="status" class="info">Choose connection method above</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>📘 Notes</h3>
-            <ul style="color:#ccc;line-height:1.6">
-                <li>Works on Ethereum mainnet (Uniswap V2 router). Gas will be paid by your wallet.</li>
-                <li>For other networks (BSC/Polygon) change router & token addresses accordingly.</li>
-                <li>Always test with small amounts first.</li>
-            </ul>
-        </div>
+    <div>
+      <button id="openMetamaskBtn">Open in MetaMask Mobile (deep link)</button>
+      <button id="openWCBtn">Connect via WalletConnect (open app)</button>
+      <button id="connectInjectedBtn">Connect injected provider (MetaMask extension / in-app)</button>
     </div>
 
-    <!-- Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+    <div style="margin-top:12px">
+      <p><strong>Current URL:</strong> <code id="currentUrl"></code></p>
+      <p id="status">Status: idle</p>
+    </div>
 
-    <script>
-    // --- Configuration / constants ---
-    const UNISWAP_V2_ROUTER = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"; // Uniswap V2 Router on Ethereum mainnet
-    // Mainnet token addresses (change if using testnet/other chain)
-    const TOKEN_ADDRESSES = {
-        USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-    };
+    <hr style="border-color:#15202b"/>
 
-    // Minimal ABIs
-    const ERC20_ABI = [
-        {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function"},
-        {"constant":true,"inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"type":"function"},
-        {"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"},
-        {"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"}
-    ];
+    <p><strong>Notes:</strong></p>
+    <ul>
+      <li>Deep-link: <code>https://metamask.app.link/dapp/&lt;your_dapp_url&gt;</code> — MetaMask Mobile ilovasining ichki brauzerida dappni ochadi.</li>
+      <li>Agar siz lokal serverda bo'lsangiz (localhost), ngrok orqali HTTPS qilishingiz mumkin va app.link ishlaydi.</li>
+      <li>WalletConnect avtomatik tarzda mobil hamyonni chaqiradi (agar ilova o‘rnatilgan bo‘lsa).</li>
+    </ul>
+  </div>
 
-    const UNISWAP_ROUTER_ABI = [
-        {"name":"swapExactETHForTokens","type":"function","inputs":[{"name":"amountOutMin","type":"uint256"},{"name":"path","type":"address[]"},{"name":"to","type":"address"},{"name":"deadline","type":"uint256"}],"outputs":[{"name":"amounts","type":"uint256[]"}],"stateMutability":"payable"},
-        {"name":"swapExactTokensForETH","type":"function","type":"function","inputs":[{"name":"amountIn","type":"uint256"},{"name":"amountOutMin","type":"uint256"},{"name":"path","type":"address[]"},{"name":"to","type":"address"},{"name":"deadline","type":"uint256"}],"outputs":[{"name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable"},
-        {"name":"swapExactTokensForTokens","type":"function","inputs":[{"name":"amountIn","type":"uint256"},{"name":"amountOutMin","type":"uint256"},{"name":"path","type":"address[]"},{"name":"to","type":"address"},{"name":"deadline","type":"uint256"}],"outputs":[{"name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable"},
-        // Note: above ABI entries are simplified for contract.methods usage
-    ];
+  <!-- CDN libs for WalletConnect v1 + Web3 (v1 works broadly) -->
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
 
-    // --- State ---
-    let web3 = null;
-    let provider = null; // either window.ethereum or WalletConnect provider
-    let userAddress = null;
-    let currentProviderType = null; // 'metamask' | 'walletconnect'
+  <script>
+    const currentUrlEl = document.getElementById('currentUrl');
+    const statusEl = document.getElementById('status');
+    const openMetamaskBtn = document.getElementById('openMetamaskBtn');
+    const openWCBtn = document.getElementById('openWCBtn');
+    const connectInjectedBtn = document.getElementById('connectInjectedBtn');
 
-    // --- DOM ---
-    const metamaskBtn = document.getElementById('metamaskBtn');
-    const walletConnectBtn = document.getElementById('walletConnectBtn');
-    const swapBtn = document.getElementById('swapBtn');
-    const walletInfo = document.getElementById('walletInfo');
-    const walletAddressEl = document.getElementById('walletAddress');
-    const statusDiv = document.getElementById('status');
-    const fromTokenSel = document.getElementById('fromToken');
-    const toTokenSel = document.getElementById('toToken');
-    const amountInput = document.getElementById('amount');
-    const disconnectBtn = document.getElementById('disconnectBtn');
+    const pageUrl = window.location.href;
+    currentUrlEl.textContent = pageUrl;
 
-    function setStatus(text, cls='info') {
-        statusDiv.textContent = text;
-        statusDiv.className = cls;
+    function setStatus(msg, ok){
+      statusEl.textContent = 'Status: ' + msg;
+      statusEl.style.color = ok ? '#7efcbb' : '#ffd6d6';
     }
 
-    function shortAddr(addr){
-        if(!addr) return '—';
-        return addr.substr(0,8) + '...' + addr.substr(addr.length-6);
-    }
+    // 1) Open MetaMask Mobile using app.link deep link
+    openMetamaskBtn.addEventListener('click', () => {
+      // Construct deep link for MetaMask to open this DApp in its internal browser
+      // Note: Use encodeURIComponent for URL
+      const dappUrl = encodeURIComponent(pageUrl);
+      const deepLink = `https://metamask.app.link/dapp/${dappUrl}`;
 
-    function enableSwapUI(enabled){
-        swapBtn.disabled = !enabled;
-    }
-
-    // --- Wallet connections ---
-    async function connectMetaMask(){
-        try {
-            if (typeof window.ethereum === 'undefined') {
-                setStatus('MetaMask not found. Install MetaMask extension or mobile wallet.', 'error');
-                return;
-            }
-            provider = window.ethereum;
-            await provider.request({ method: 'eth_requestAccounts' });
-            web3 = new Web3(provider);
-            const accounts = await web3.eth.getAccounts();
-            if(accounts.length===0) { setStatus('No accounts found in MetaMask', 'error'); return; }
-            userAddress = accounts[0];
-            currentProviderType = 'metamask';
-            showConnected();
-            // listeners
-            provider.on && provider.on('accountsChanged', (accs)=> {
-                if(!accs || accs.length===0) return disconnect();
-                userAddress = accs[0];
-                showConnected();
-            });
-            provider.on && provider.on('chainChanged', (chainId)=> {
-                setStatus('Network changed: ' + chainId, 'info');
-            });
-            setStatus('✅ MetaMask connected!', 'success');
-        } catch(err){
-            console.error(err);
-            setStatus('MetaMask connect error: ' + (err.message || err), 'error');
-        }
-    }
-
-    async function connectWalletConnect(){
-        try {
-            setStatus('Initializing WalletConnect...', 'info');
-            // create provider
-            const WalletConnectProvider = window.WalletConnectProvider.default;
-            provider = new WalletConnectProvider({
-                rpc: {
-                    1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
-                },
-                bridge: "https://bridge.walletconnect.org",
-                qrcode: true // let provider show QR (simpler)
-            });
-            await provider.enable(); // opens QR if not connected
-            web3 = new Web3(provider);
-            const accounts = await web3.eth.getAccounts();
-            if (accounts.length===0){ setStatus('No accounts found', 'error'); return; }
-            userAddress = accounts[0];
-            currentProviderType = 'walletconnect';
-            showConnected();
-            // events
-            provider.on && provider.on('accountsChanged', (accs)=> {
-                if(!accs || accs.length===0) return disconnect();
-                userAddress = accs[0];
-                showConnected();
-            });
-            provider.on && provider.on('chainChanged', (chainId)=> {
-                setStatus('Network changed: ' + chainId, 'info');
-            });
-            provider.on && provider.on('disconnect', ()=> {
-                disconnect();
-            });
-            setStatus('✅ WalletConnect connected!', 'success');
-        } catch(err){
-            console.error('WC err', err);
-            setStatus('WalletConnect error: ' + (err.message || err), 'error');
-        }
-    }
-
-    function showConnected(){
-        walletInfo.style.display = 'block';
-        walletAddressEl.textContent = shortAddr(userAddress);
-        enableSwapUI(true);
-    }
-
-    async function disconnect(){
-        try {
-            if(currentProviderType === 'walletconnect' && provider && provider.disconnect){
-                await provider.disconnect();
-            }
-        } catch(e){ console.warn('disconnect issue', e); }
-        web3 = null;
-        provider = null;
-        userAddress = null;
-        currentProviderType = null;
-        walletInfo.style.display = 'none';
-        enableSwapUI(false);
-        setStatus('Wallet disconnected', 'info');
-    }
-
-    // --- Helpers for token math ---
-    async function getTokenDecimals(address){
-        if(!address) return 18;
-        const token = new web3.eth.Contract(ERC20_ABI, address);
-        try {
-            const dec = await token.methods.decimals().call();
-            return Number(dec);
-        } catch(e){
-            console.warn('decimals read failed', e);
-            return 18;
-        }
-    }
-
-    // convert amount (string from input) to wei/units as string
-    async function amountToUnits(tokenSymbol, amountStr){
-        if(!web3) throw new Error('web3 not initialized');
-        const amount = Number(amountStr);
-        if(isNaN(amount) || amount <= 0) throw new Error('Invalid amount');
-        if(tokenSymbol === 'ETH'){
-            // use wei
-            return web3.utils.toWei(amountStr.toString(), 'ether');
-        } else {
-            const addr = TOKEN_ADDRESSES[tokenSymbol];
-            if(!addr) throw new Error('Unknown token address for ' + tokenSymbol);
-            const decimals = await getTokenDecimals(addr);
-            // careful with big numbers: use string multiplication
-            // amountStr may contain decimals -> convert via splitting
-            const parts = amountStr.toString().split('.');
-            let whole = parts[0];
-            let frac = parts[1] || '';
-            if(frac.length > decimals) frac = frac.substr(0, decimals);
-            while(frac.length < decimals) frac += '0';
-            const combined = whole + frac;
-            return web3.utils.toBN(combined).toString();
-        }
-    }
-
-    // check allowance
-    async function allowanceOK(tokenAddr, owner, spender, amountBN){
-        const token = new web3.eth.Contract(ERC20_ABI, tokenAddr);
-        try {
-            const allow = await token.methods.allowance(owner, spender).call();
-            return web3.utils.toBN(allow).gte(web3.utils.toBN(amountBN));
-        } catch(e){
-            console.error('allowance check failed', e);
-            return false;
-        }
-    }
-
-    // approve token to router if needed
-    async function ensureApproval(tokenAddr, owner, spender, amountBN){
-        const token = new web3.eth.Contract(ERC20_ABI, tokenAddr);
-        const ok = await allowanceOK(tokenAddr, owner, spender, amountBN);
-        if(ok) return true;
-        setStatus('Approving token for router...', 'info');
-        try {
-            const gasEstimate = await token.methods.approve(spender, amountBN).estimateGas({from: owner});
-            const tx = await token.methods.approve(spender, amountBN).send({from: owner, gas: Math.floor(gasEstimate * 1.2)});
-            console.log('approve tx', tx);
-            setStatus('✅ Approval confirmed', 'success');
-            return true;
-        } catch(err){
-            console.error('approve failed', err);
-            setStatus('Approval failed: ' + (err.message || err), 'error');
-            throw err;
-        }
-    }
-
-    // --- Swap logic using Uniswap V2 router ---
-    async function executeSwap(){
-        try {
-            if(!web3 || !userAddress) { setStatus('Connect wallet first', 'error'); return; }
-            const fromToken = fromTokenSel.value;
-            const toToken = toTokenSel.value;
-            if(fromToken === toToken){ setStatus('Choose different tokens', 'error'); return; }
-            const amountStr = amountInput.value;
-            if(!amountStr || Number(amountStr) <= 0){ setStatus('Enter valid amount', 'error'); return; }
-
-            setStatus('Preparing swap...', 'info');
-            swapBtn.disabled = true;
-
-            const router = new web3.eth.Contract(UNISWAP_ROUTER_ABI, UNISWAP_V2_ROUTER);
-            const deadline = Math.floor(Date.now()/1000) + (60*20); // 20 minutes
-            const slippagePct = 1; // 1% slippage tolerance -> we set amountOutMin = 99% of expected.
-            // Note: for production you should query router.getAmountsOut(amountIn, path) to compute exact amountOutMin.
-            // For simplicity, we set amountOutMin = 0 (NOT recommended) or small safety factor.
-            // We'll attempt to call getAmountsOut (if available) using router contract native method signature.
-
-            // Build path
-            const wethAddress = await getWETHAddress(); // WETH from router (we will query via standard)
-            // helper to get token address or WETH placeholder
-            function tokenAddr(sym){
-                if(sym === 'ETH') return wethAddress; // for path we use WETH address
-                return TOKEN_ADDRESSES[sym];
-            }
-
-            const path = [];
-            if(fromToken === 'ETH' || toToken === 'ETH'){
-                // path length 2: ETH <-> TOKEN uses WETH <-> TOKEN
-                path.push(tokenAddr(fromToken));
-                path.push(tokenAddr(toToken));
-            } else {
-                // Token -> Token via WETH
-                path.push(tokenAddr(fromToken));
-                path.push(wethAddress);
-                path.push(tokenAddr(toToken));
-            }
-
-            // compute amountIn in units
-            const amountInUnits = await amountToUnits(fromToken, amountStr);
-
-            // Attempt to get amountsOut via router.getAmountsOut (this method exists on UniswapV2Router)
-            let amountOutMin = 0;
-            try {
-                if(router.methods.getAmountsOut){
-                    const amounts = await router.methods.getAmountsOut(amountInUnits, path).call();
-                    const expectedOut = amounts[amounts.length - 1];
-                    // apply slippage pct
-                    const bnExp = web3.utils.toBN(expectedOut);
-                    const bnMin = bnExp.mul(web3.utils.toBN(100 - slippagePct)).div(web3.utils.toBN(100));
-                    amountOutMin = bnMin.toString();
-                } else {
-                    // fallback
-                    amountOutMin = "0";
-                }
-            } catch(err){
-                console.warn('getAmountsOut failed, proceeding with amountOutMin=0', err);
-                amountOutMin = "0";
-            }
-
-            // Distinguish cases
-            if(fromToken === 'ETH') {
-                // swapExactETHForTokens
-                setStatus('Swapping ETH → ' + toToken + '...', 'info');
-                const value = amountInUnits; // wei
-                // call swapExactETHForTokens(amountOutMin, path, to, deadline) payable
-                try {
-                    const gasEstimate = await router.methods.swapExactETHForTokens(
-                        amountOutMin,
-                        path,
-                        userAddress,
-                        deadline
-                    ).estimateGas({from: userAddress, value: value});
-                    const tx = await router.methods.swapExactETHForTokens(
-                        amountOutMin,
-                        path,
-                        userAddress,
-                        deadline
-                    ).send({from: userAddress, value: value, gas: Math.floor(gasEstimate * 1.2)});
-                    setStatus('✅ Swap success. TX: ' + (tx.transactionHash || tx.txHash || 'unknown'), 'success');
-                } catch(err){
-                    console.error('swap ETH->token failed', err);
-                    setStatus('Swap failed: ' + (err.message || err), 'error');
-                }
-            } else if(toToken === 'ETH') {
-                // swapExactTokensForETH
-                // approve token first
-                const tokenAddress = TOKEN_ADDRESSES[fromToken];
-                await ensureApproval(tokenAddress, userAddress, UNISWAP_V2_ROUTER, amountInUnits);
-                setStatus(fromToken + ' approved. Swapping → ETH...', 'info');
-                try {
-                    const gasEstimate = await router.methods.swapExactTokensForETH(
-                        amountInUnits,
-                        amountOutMin,
-                        path,
-                        userAddress,
-                        deadline
-                    ).estimateGas({from: userAddress});
-                    const tx = await router.methods.swapExactTokensForETH(
-                        amountInUnits,
-                        amountOutMin,
-                        path,
-                        userAddress,
-                        deadline
-                    ).send({from: userAddress, gas: Math.floor(gasEstimate * 1.2)});
-                    setStatus('✅ Swap success. TX: ' + (tx.transactionHash || tx.txHash || 'unknown'), 'success');
-                } catch(err){
-                    console.error('swap token->ETH failed', err);
-                    setStatus('Swap failed: ' + (err.message || err), 'error');
-                }
-            } else {
-                // Token -> Token swap
-                const tokenAddress = TOKEN_ADDRESSES[fromToken];
-                await ensureApproval(tokenAddress, userAddress, UNISWAP_V2_ROUTER, amountInUnits);
-                setStatus(fromToken + ' approved. Swapping → ' + toToken + '...', 'info');
-                try {
-                    const gasEstimate = await router.methods.swapExactTokensForTokens(
-                        amountInUnits,
-                        amountOutMin,
-                        path,
-                        userAddress,
-                        deadline
-                    ).estimateGas({from: userAddress});
-                    const tx = await router.methods.swapExactTokensForTokens(
-                        amountInUnits,
-                        amountOutMin,
-                        path,
-                        userAddress,
-                        deadline
-                    ).send({from: userAddress, gas: Math.floor(gasEstimate * 1.2)});
-                    setStatus('✅ Swap success. TX: ' + (tx.transactionHash || tx.txHash || 'unknown'), 'success');
-                } catch(err){
-                    console.error('swap token->token failed', err);
-                    setStatus('Swap failed: ' + (err.message || err), 'error');
-                }
-            }
-
-        } catch(err){
-            console.error('executeSwap error', err);
-            setStatus('Error: ' + (err.message || err), 'error');
-        } finally {
-            swapBtn.disabled = false;
-        }
-    }
-
-    // Helper: get WETH address used by router by reading `WETH()` if the router exposes it
-    async function getWETHAddress(){
-        // common WETH mainnet address:
-        const DEFAULT_WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
-        try {
-            const router = new web3.eth.Contract([
-                {"constant":true,"inputs":[],"name":"WETH","outputs":[{"name":"","type":"address"}],"type":"function"}
-            ], UNISWAP_V2_ROUTER);
-            const w = await router.methods.WETH().call();
-            return w || DEFAULT_WETH;
-        } catch(e){
-            return DEFAULT_WETH;
-        }
-    }
-
-    // --- Event listeners ---
-    metamaskBtn.addEventListener('click', connectMetaMask);
-    walletConnectBtn.addEventListener('click', connectWalletConnect);
-    swapBtn.addEventListener('click', executeSwap);
-    disconnectBtn.addEventListener('click', disconnect);
-
-    // on load: check existing MetaMask connection
-    window.addEventListener('load', async ()=> {
-        if(typeof window.ethereum !== 'undefined'){
-            try {
-                const w3 = new Web3(window.ethereum);
-                const accounts = await w3.eth.getAccounts();
-                if(accounts && accounts.length>0){
-                    // auto use MetaMask if already connected
-                    web3 = w3;
-                    provider = window.ethereum;
-                    userAddress = accounts[0];
-                    currentProviderType = 'metamask';
-                    showConnected();
-                    setStatus('✅ MetaMask reconnected', 'success');
-                }
-            } catch(e){ /* ignore */ }
-        }
+      // For iOS/Android: navigating window.location will try to open the MetaMask app.
+      // If app not installed, it will fallback to MetaMask landing page.
+      setStatus('Opening MetaMask app...', true);
+      // Small delay to allow mobile to handle
+      window.location.href = deepLink;
     });
-    </script>
+
+    // 2) WalletConnect - opens installed wallet via universal link / QR
+    openWCBtn.addEventListener('click', async () => {
+      if (!window.WalletConnectProvider) {
+        setStatus('WalletConnect provider script not loaded', false);
+        return;
+      }
+      try {
+        setStatus('Initializing WalletConnect provider...', true);
+        const WalletConnectProvider = window.WalletConnectProvider.default;
+
+        // Create provider — rpc for chains you want (1=Ethereum mainnet)
+        const provider = new WalletConnectProvider({
+          rpc: {
+            1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+            56: "https://bsc-dataseed.binance.org/",
+            137: "https://polygon-rpc.com/"
+          },
+          bridge: "https://bridge.walletconnect.org",
+          qrcode: false // we will use direct deep link for mobile if possible
+        });
+
+        // Enable session (this will return a walletconnect URI)
+        await provider.enable();
+
+        // If provider.connector.uri exists, we can turn it into a deep link that opens MetaMask
+        const wcUri = provider.connector && provider.connector.uri;
+        if (wcUri) {
+          // MetaMask mobile supports walletconnect: use universal link format
+          // Format for MetaMask (and some wallets): metamask://wc?uri=<encodedURI>
+          // Also some wallets accept 'wc:<uri>' via window.location
+          const encoded = encodeURIComponent(wcUri);
+          const metaDeep = `metamask://wc?uri=${encoded}`; // might work on some Android devices
+          // Try direct open
+          setStatus('Opening wallet app via WalletConnect URI...', true);
+          window.location.href = metaDeep;
+
+          // If deep link fails (no app), you can fallback to showing QR for desktop scanning:
+          // (We won't implement QR modal here to keep minimal.)
+        } else {
+          setStatus('WalletConnect connected (no wc uri).', true);
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus('WalletConnect error: ' + (err.message || err), false);
+      }
+    });
+
+    // 3) injected provider (MetaMask extension or MetaMask mobile in-app)
+    connectInjectedBtn.addEventListener('click', async () => {
+      if (typeof window.ethereum === 'undefined') {
+        setStatus('No injected provider found. Open this page in MetaMask mobile browser or install MetaMask.', false);
+        return;
+      }
+      try {
+        setStatus('Requesting accounts...', true);
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setStatus('Connected: ' + accounts[0], true);
+      } catch (err) {
+        console.error(err);
+        setStatus('Injected connect failed: ' + (err.message || err), false);
+      }
+    });
+
+    // Helpful tip: if page served via http (not https) some deep-links may be restricted on iOS.
+    // Recommend using HTTPS or localhost + ngrok for testing.
+  </script>
 </body>
 </html>
