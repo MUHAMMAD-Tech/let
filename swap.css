@@ -143,22 +143,6 @@ body {
     box-shadow: 0 0 0 3px rgba(129, 83, 169, 0.1);
 }
 
-/* Token Select Wrapper */
-.token-select-wrapper {
-    position: relative;
-}
-
-.token-select-wrapper::after {
-    content: '▼';
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--primary-color);
-    pointer-events: none;
-    font-size: 0.8rem;
-}
-
 /* ===== BUTTONS ===== */
 .btn {
     display: inline-block;
@@ -304,6 +288,11 @@ body {
     font-size: 0.8rem;
 }
 
+/* ===== UTILITY CLASSES ===== */
+.mt-3 { margin-top: var(--space-lg); }
+.mb-3 { margin-bottom: var(--space-lg); }
+.mt-2 { margin-top: var(--space-md); }
+
 /* ===== RESPONSIVE DESIGN ===== */
 
 /* Tablet */
@@ -391,8 +380,3 @@ body {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
 }
-
-/* Utility classes */
-.mt-3 { margin-top: var(--space-lg); }
-.mb-3 { margin-bottom: var(--space-lg); }
-.mt-2 { margin-top: var(--space-md); }
