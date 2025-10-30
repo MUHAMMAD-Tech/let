@@ -26,15 +26,12 @@ class RealTransaction {
     async executeEVMSwap(swapData, wallet, fromToken, amount) {
         const { signer, userAddress } = wallet;
 
-        // Check if approval is needed for tokens
         if (fromToken.address !== 'native') {
             await this.checkAndApprove(fromToken, swapData.tx.to, amount, wallet);
         }
 
-        // Execute swap
         let tx;
         if (fromToken.address === 'native') {
-            // Native token swap (ETH, BNB, MATIC)
             tx = await signer.sendTransaction({
                 to: swapData.tx.to,
                 value: swapData.tx.value,
@@ -42,7 +39,6 @@ class RealTransaction {
                 gasLimit: this.gasLimits.swap
             });
         } else {
-            // ERC20 token swap
             tx = await signer.sendTransaction({
                 to: swapData.tx.to,
                 data: swapData.tx.data,
@@ -52,7 +48,6 @@ class RealTransaction {
 
         console.log('📦 Transaction sent:', tx.hash);
         
-        // Wait for confirmation
         const receipt = await tx.wait();
         console.log('✅ Transaction confirmed:', receipt.transactionHash);
         
@@ -62,19 +57,15 @@ class RealTransaction {
     async executeSolanaSwap(swapData, wallet) {
         const { signer } = wallet;
 
-        // Decode transaction
         const transaction = bs58.decode(swapData.swapTransaction);
         
-        // Sign transaction
         const signedTransaction = await signer.signTransaction(
             window.solanaWeb3.Transaction.from(transaction)
         );
         
-        // Send transaction
         const signature = await signer.sendRawTransaction(signedTransaction.serialize());
         console.log('📦 Solana transaction sent:', signature);
         
-        // Wait for confirmation
         const connection = new window.solanaWeb3.Connection(
             window.solanaWeb3.clusterApiUrl('mainnet-beta')
         );
@@ -93,7 +84,6 @@ class RealTransaction {
             "function allowance(address owner, address spender) view returns (uint256)"
         ], signer);
 
-        // Check current allowance
         const currentAllowance = await tokenContract.allowance(userAddress, spender);
         const requiredAllowance = ethers.utils.parseUnits(amount.toString(), token.decimals);
 
