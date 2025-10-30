@@ -89,10 +89,19 @@
       <!-- Sizning mavjud HTML ingizga swap section ni shu bilan almashtiring: -->
 
     <!-- Swap Section -->
-  <section class="section full-height over-hide swapc swap-section">
+    <section class="section full-height over-hide swapc swap-section">
         <div class="container text-center">
-            <h2 class="mb-4">Multi-Swap</h2>
+            <h2 class="mb-4">Real Multi-Chain Swap</h2>
             <div class="swap-box">
+                <!-- Auto Wallet Detection -->
+                <div class="form-group">
+                    <label>Connect Wallet</label>
+                    <button id="autoConnectBtn" class="btn btn-primary btn-large">
+                        🔍 Detect & Connect Wallet
+                    </button>
+                    <small class="form-text">We'll automatically detect your installed wallets</small>
+                </div>
+
                 <!-- Network Selector -->
                 <div class="form-group">
                     <label for="networkSelect">Network</label>
@@ -124,22 +133,6 @@
                 <!-- Balance Display -->
                 <div id="balanceInfo" class="balance-info"></div>
                 
-                <!-- Wallet Buttons -->
-                <div class="wallet-buttons">
-                    <button id="connectMetaMask" class="btn btn-wallet metamask">
-                        <span class="wallet-icon">🦊</span>
-                        Connect MetaMask
-                    </button>
-                    <button id="connectPhantom" class="btn btn-wallet phantom">
-                        <span class="wallet-icon">👻</span>
-                        Connect Phantom
-                    </button>
-                    <button id="connectTrust" class="btn btn-wallet trust">
-                        <span class="wallet-icon">🔒</span>
-                        Connect Trust Wallet
-                    </button>
-                </div>
-                
                 <!-- Wallet Address Display -->
                 <div id="walletAddress" class="mt-3 mb-3"></div>
                 
@@ -161,7 +154,6 @@
             </div>
         </div>
     </section>
-
 
     <!-- Cursors -->
     <div class='cursor' id="cursor"></div>
