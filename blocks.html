@@ -1,142 +1,69 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Open MetaMask Mobile / WalletConnect demo</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>WalletConnect Auto Connect</title>
+  <script type="module">
+    import { SignClient } from "https://unpkg.com/@walletconnect/sign-client@2.11.0/dist/index.modern.js";
+
+    // ⚠️ Bu yerga o'zingning projectId'ni joylashtir!
+    const PROJECT_ID = "f76f0bcabf40fadb066240a1c96eff76";
+
+    // WalletConnect URI — bu seni DApp'dan kelgan link
+    const WALLETCONNECT_URI = "wc:60aee1a2ee0933a28cb9c9ca7109434ade74679dac0447242aef735b5007d06d@2?relay-protocol=irn&symKey=bf5510c200fc1ad394e04caf4a127403ecb171075fb5ae557623ba03ebc28a28&expiryTimestamp=1761825695";
+
+    async function connectWallet() {
+      try {
+        const client = await SignClient.init({
+          projectId: PROJECT_ID,
+          metadata: {
+            name: "My DApp",
+            description: "WalletConnect Demo",
+            url: "https://example.org",
+            icons: ["https://walletconnect.com/walletconnect-logo.png"]
+          }
+        });
+
+        const session = await client.pair({ uri: WALLETCONNECT_URI });
+        console.log("✅ WalletConnect session:", session);
+        document.getElementById("status").textContent = "✅ Wallet ulandi!";
+      } catch (err) {
+        console.error("❌ Ulanishda xato:", err);
+        document.getElementById("status").textContent = "❌ Ulanishda xato: " + err.message;
+      }
+    }
+
+    window.onload = () => {
+      document.getElementById("connectBtn").onclick = connectWallet;
+    };
+  </script>
+
   <style>
-    body{font-family:Arial,sans-serif;background:#0f1724;color:#e6eef8;padding:20px}
-    .card{background:#0b1220;padding:18px;border-radius:10px;border:1px solid #18232f;max-width:720px;margin:12px auto}
-    button{padding:12px 16px;border-radius:8px;border:0;background:#06b6d4;color:#042027;font-weight:700;cursor:pointer;margin:8px}
-    .danger{background:#ef4444;color:white}
-    p{color:#9fb0c8}
-    code{background:#071122;padding:4px 6px;border-radius:6px;color:#9fe2d8}
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+    button {
+      background: #3b82f6;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 12px;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #2563eb;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>Open MetaMask Mobile / WalletConnect</h2>
-    <p>Bu sahifa MetaMask mobil ilovasini yoki boshqa WalletConnect hamyonlarini ochish uchun misollar beradi.</p>
-
-    <div>
-      <button id="openMetamaskBtn">Open in MetaMask Mobile (deep link)</button>
-      <button id="openWCBtn">Connect via WalletConnect (open app)</button>
-      <button id="connectInjectedBtn">Connect injected provider (MetaMask extension / in-app)</button>
-    </div>
-
-    <div style="margin-top:12px">
-      <p><strong>Current URL:</strong> <code id="currentUrl"></code></p>
-      <p id="status">Status: idle</p>
-    </div>
-
-    <hr style="border-color:#15202b"/>
-
-    <p><strong>Notes:</strong></p>
-    <ul>
-      <li>Deep-link: <code>https://metamask.app.link/dapp/&lt;your_dapp_url&gt;</code> — MetaMask Mobile ilovasining ichki brauzerida dappni ochadi.</li>
-      <li>Agar siz lokal serverda bo'lsangiz (localhost), ngrok orqali HTTPS qilishingiz mumkin va app.link ishlaydi.</li>
-      <li>WalletConnect avtomatik tarzda mobil hamyonni chaqiradi (agar ilova o‘rnatilgan bo‘lsa).</li>
-    </ul>
-  </div>
-
-  <!-- CDN libs for WalletConnect v1 + Web3 (v1 works broadly) -->
-  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
-
-  <script>
-    const currentUrlEl = document.getElementById('currentUrl');
-    const statusEl = document.getElementById('status');
-    const openMetamaskBtn = document.getElementById('openMetamaskBtn');
-    const openWCBtn = document.getElementById('openWCBtn');
-    const connectInjectedBtn = document.getElementById('connectInjectedBtn');
-
-    const pageUrl = window.location.href;
-    currentUrlEl.textContent = pageUrl;
-
-    function setStatus(msg, ok){
-      statusEl.textContent = 'Status: ' + msg;
-      statusEl.style.color = ok ? '#7efcbb' : '#ffd6d6';
-    }
-
-    // 1) Open MetaMask Mobile using app.link deep link
-    openMetamaskBtn.addEventListener('click', () => {
-      // Construct deep link for MetaMask to open this DApp in its internal browser
-      // Note: Use encodeURIComponent for URL
-      const dappUrl = encodeURIComponent(pageUrl);
-      const deepLink = `https://metamask.app.link/dapp/${dappUrl}`;
-
-      // For iOS/Android: navigating window.location will try to open the MetaMask app.
-      // If app not installed, it will fallback to MetaMask landing page.
-      setStatus('Opening MetaMask app...', true);
-      // Small delay to allow mobile to handle
-      window.location.href = deepLink;
-    });
-
-    // 2) WalletConnect - opens installed wallet via universal link / QR
-    openWCBtn.addEventListener('click', async () => {
-      if (!window.WalletConnectProvider) {
-        setStatus('WalletConnect provider script not loaded', false);
-        return;
-      }
-      try {
-        setStatus('Initializing WalletConnect provider...', true);
-        const WalletConnectProvider = window.WalletConnectProvider.default;
-
-        // Create provider — rpc for chains you want (1=Ethereum mainnet)
-        const provider = new WalletConnectProvider({
-          rpc: {
-            1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
-            56: "https://bsc-dataseed.binance.org/",
-            137: "https://polygon-rpc.com/"
-          },
-          bridge: "https://bridge.walletconnect.org",
-          qrcode: false // we will use direct deep link for mobile if possible
-        });
-
-        // Enable session (this will return a walletconnect URI)
-        await provider.enable();
-
-        // If provider.connector.uri exists, we can turn it into a deep link that opens MetaMask
-        const wcUri = provider.connector && provider.connector.uri;
-        if (wcUri) {
-          // MetaMask mobile supports walletconnect: use universal link format
-          // Format for MetaMask (and some wallets): metamask://wc?uri=<encodedURI>
-          // Also some wallets accept 'wc:<uri>' via window.location
-          const encoded = encodeURIComponent(wcUri);
-          const metaDeep = `metamask://wc?uri=${encoded}`; // might work on some Android devices
-          // Try direct open
-          setStatus('Opening wallet app via WalletConnect URI...', true);
-          window.location.href = metaDeep;
-
-          // If deep link fails (no app), you can fallback to showing QR for desktop scanning:
-          // (We won't implement QR modal here to keep minimal.)
-        } else {
-          setStatus('WalletConnect connected (no wc uri).', true);
-        }
-      } catch (err) {
-        console.error(err);
-        setStatus('WalletConnect error: ' + (err.message || err), false);
-      }
-    });
-
-    // 3) injected provider (MetaMask extension or MetaMask mobile in-app)
-    connectInjectedBtn.addEventListener('click', async () => {
-      if (typeof window.ethereum === 'undefined') {
-        setStatus('No injected provider found. Open this page in MetaMask mobile browser or install MetaMask.', false);
-        return;
-      }
-      try {
-        setStatus('Requesting accounts...', true);
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        setStatus('Connected: ' + accounts[0], true);
-      } catch (err) {
-        console.error(err);
-        setStatus('Injected connect failed: ' + (err.message || err), false);
-      }
-    });
-
-    // Helpful tip: if page served via http (not https) some deep-links may be restricted on iOS.
-    // Recommend using HTTPS or localhost + ngrok for testing.
-  </script>
+  <h1>🔗 WalletConnect v2 Demo</h1>
+  <button id="connectBtn">Walletni ulash</button>
+  <p id="status"></p>
 </body>
 </html>
