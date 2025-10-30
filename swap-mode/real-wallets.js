@@ -1,4 +1,4 @@
-// real-wallets-fixed.js - Tuzatilgan wallet connection
+// real-wallets.js - Haqiqiy wallet connection
 class RealWalletConnector {
     constructor() {
         this.provider = null;
@@ -8,17 +8,15 @@ class RealWalletConnector {
         this.isConnected = false;
     }
 
-    // MetaMask connection - FIXED
+    // MetaMask connection
     async connectMetaMask() {
         console.log('🔍 Checking for MetaMask...');
         
-        // MetaMask ni tekshirish
         if (typeof window.ethereum === 'undefined') {
             console.log('❌ window.ethereum not found');
             throw new Error('MetaMask not installed. Please install MetaMask browser extension.');
         }
 
-        // MetaMask provider ni tekshirish
         if (!window.ethereum.isMetaMask && !window.ethereum.selectedAddress) {
             console.log('❌ MetaMask provider not detected');
             throw new Error('MetaMask not detected. Make sure MetaMask is installed and unlocked.');
@@ -27,7 +25,6 @@ class RealWalletConnector {
         console.log('✅ MetaMask detected, requesting accounts...');
 
         try {
-            // Accounts ni so'rash
             const accounts = await window.ethereum.request({
                 method: 'eth_requestAccounts'
             });
@@ -41,18 +38,14 @@ class RealWalletConnector {
             this.userAddress = accounts[0];
             console.log('✅ User address:', this.userAddress);
 
-            // Provider va signer ni yaratish
             this.provider = new ethers.providers.Web3Provider(window.ethereum);
             this.signer = this.provider.getSigner();
             
-            // Network ma'lumotlarini olish
             const network = await this.provider.getNetwork();
             this.currentChainId = network.chainId;
             console.log('✅ Network chainId:', this.currentChainId);
 
-            // Event listeners
             this.setupEventListeners();
-
             this.isConnected = true;
 
             return {
@@ -76,7 +69,7 @@ class RealWalletConnector {
         }
     }
 
-    // Phantom connection - FIXED
+    // Phantom connection
     async connectPhantom() {
         console.log('🔍 Checking for Phantom...');
         
@@ -95,7 +88,6 @@ class RealWalletConnector {
         console.log('✅ Phantom detected, connecting...');
 
         try {
-            // Phantom ga ulanish
             const response = await solana.connect();
             console.log('📨 Phantom connection response:', response);
 
@@ -107,7 +99,6 @@ class RealWalletConnector {
 
             console.log('✅ Phantom connected, address:', this.userAddress);
 
-            // Event listeners
             solana.on('disconnect', () => this.handleDisconnect());
 
             return {
@@ -129,7 +120,7 @@ class RealWalletConnector {
         }
     }
 
-    // Trust Wallet connection - FIXED
+    // Trust Wallet connection
     async connectTrustWallet() {
         console.log('🔍 Checking for Trust Wallet...');
         
@@ -138,7 +129,6 @@ class RealWalletConnector {
             throw new Error('Trust Wallet not installed. Please install Trust Wallet mobile app or browser extension.');
         }
 
-        // Trust Wallet ni tekshirish
         const isTrustWallet = window.ethereum.isTrust || 
                              (window.ethereum.providers && 
                               window.ethereum.providers.some(p => p.isTrust));
@@ -151,7 +141,6 @@ class RealWalletConnector {
         console.log('✅ Trust Wallet detected, requesting accounts...');
 
         try {
-            // Trust Wallet MetaMask compatible bo'lgani uchun
             return await this.connectMetaMask();
         } catch (error) {
             console.error('❌ Trust Wallet connection error:', error);
@@ -159,11 +148,10 @@ class RealWalletConnector {
         }
     }
 
-    // Wallet detection - YANGI
+    // Wallet detection
     detectAvailableWallets() {
         const availableWallets = [];
 
-        // MetaMask ni tekshirish
         if (typeof window.ethereum !== 'undefined') {
             if (window.ethereum.isMetaMask) {
                 availableWallets.push({
@@ -183,7 +171,6 @@ class RealWalletConnector {
                 });
             }
 
-            // Agar hech qaysi wallet aniqlanmasa, lekin ethereum mavjud bo'lsa
             if (availableWallets.length === 0 && window.ethereum.selectedAddress) {
                 availableWallets.push({
                     id: 'metamask',
@@ -194,7 +181,6 @@ class RealWalletConnector {
             }
         }
 
-        // Phantom ni tekshirish
         if (window.solana || window.phantom) {
             const solana = window.solana || window.phantom;
             if (solana.isPhantom) {
@@ -213,19 +199,16 @@ class RealWalletConnector {
 
     setupEventListeners() {
         if (window.ethereum) {
-            // Accounts o'zgarishi
             window.ethereum.on('accountsChanged', (accounts) => {
                 console.log('🔄 Accounts changed:', accounts);
                 this.handleAccountsChanged(accounts);
             });
 
-            // Network o'zgarishi
             window.ethereum.on('chainChanged', (chainId) => {
                 console.log('🔄 Chain changed:', chainId);
                 this.handleChainChanged(chainId);
             });
 
-            // Disconnect
             window.ethereum.on('disconnect', (error) => {
                 console.log('🔌 Disconnected:', error);
                 this.handleDisconnect();
@@ -257,18 +240,15 @@ class RealWalletConnector {
     }
 
     updateUI() {
-        // UI ni yangilash
         if (typeof window.updateSwapUI === 'function') {
             window.updateSwapUI(this.userAddress, this.currentChainId, this.isConnected);
         }
     }
 
-    // Disconnect funksiyasi
     disconnect() {
         this.handleDisconnect();
     }
 
-    // Connection holatini tekshirish
     getConnectionStatus() {
         return {
             isConnected: this.isConnected,
@@ -278,7 +258,6 @@ class RealWalletConnector {
         };
     }
 
-    // Balance olish - FIXED
     async getBalance(tokenAddress = null) {
         if (!this.isConnected || !this.userAddress) {
             throw new Error('Wallet not connected');
@@ -298,11 +277,9 @@ class RealWalletConnector {
 
     async getEVMBalance(tokenAddress) {
         if (!tokenAddress || tokenAddress === 'native') {
-            // Native token balance (ETH, BNB, MATIC)
             const balance = await this.provider.getBalance(this.userAddress);
             return ethers.utils.formatEther(balance);
         } else {
-            // ERC20 token balance
             const contract = new ethers.Contract(tokenAddress, [
                 "function balanceOf(address) view returns (uint256)",
                 "function decimals() view returns (uint8)"
@@ -321,13 +298,11 @@ class RealWalletConnector {
             );
             
             if (!tokenAddress || tokenAddress === 'So11111111111111111111111111111111111111112') {
-                // SOL balance
                 const balance = await connection.getBalance(
                     new window.solanaWeb3.PublicKey(this.userAddress)
                 );
                 return (balance / 1e9).toString();
             } else {
-                // SPL token balance
                 const tokenAccounts = await connection.getTokenAccountsByOwner(
                     new window.solanaWeb3.PublicKey(this.userAddress),
                     { mint: new window.solanaWeb3.PublicKey(tokenAddress) }
