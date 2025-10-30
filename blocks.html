@@ -88,6 +88,15 @@
         
         h2 { text-align: center; margin-bottom: 10px; color: #8153a9; }
         .subtitle { text-align: center; color: #888; margin-bottom: 25px; }
+        
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -97,10 +106,18 @@
         
         <!-- Mobile Instructions -->
         <div class="mobile-instructions">
-            <strong>📱 How to connect:</strong><br>
-            1. Open this page in your wallet browser<br>
-            2. Or copy link to your wallet app<br>
-            3. Connect and start swapping
+            <strong>📱 How to connect on MOBILE:</strong><br>
+            1. <strong>Copy this URL</strong><br>
+            2. <strong>Open your Wallet app</strong> (Trust, MetaMask, Phantom)<br>
+            3. <strong>Paste URL</strong> in wallet's browser<br>
+            4. Connect and start swapping
+        </div>
+
+        <!-- QR Code for Easy Mobile Access -->
+        <div id="qrCode" class="qr-code">
+            <p>Scan to open on mobile:</p>
+            <!-- QR code will be generated here -->
+            <div id="qrcode"></div>
         </div>
 
         <!-- Wallet Connection -->
@@ -135,6 +152,15 @@
             <button id="genericBtn" class="btn btn-wallet">
                 <span style="font-size: 20px;">💰</span>
                 Other Wallet
+            </button>
+        </div>
+
+        <!-- Current URL Display -->
+        <div class="mobile-instructions" style="background: #3a3a3a;">
+            <strong>📋 Current URL:</strong><br>
+            <code id="currentUrl" style="font-size: 12px; word-break: break-all; color: #8153a9;"></code>
+            <button onclick="copyUrl()" style="margin-top: 10px; padding: 8px; background: #8153a9; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                📋 Copy URL
             </button>
         </div>
 
@@ -179,6 +205,9 @@
         <div id="status" class="info">Ready to connect wallet</div>
     </div>
 
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
     <script>
         console.log("📱 Mobile Swap DApp Loading...");
         
@@ -197,6 +226,19 @@
         const walletAddress = document.getElementById('walletAddress');
         const statusDiv = document.getElementById('status');
         const amountInput = document.getElementById('amount');
+        const currentUrlElement = document.getElementById('currentUrl');
+
+        // Display current URL
+        currentUrlElement.textContent = window.location.href;
+
+        // Copy URL function
+        function copyUrl() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                updateStatus('✅ URL copied to clipboard!', 'success');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+            });
+        }
 
         // Update status
         function updateStatus(message, type = 'info') {
@@ -205,43 +247,51 @@
             console.log(`Status: ${message}`);
         }
 
-        // Detect mobile wallet
+        // Detect mobile wallet - IMPROVED VERSION
         function detectMobileWallet() {
             const wallets = [];
             
-            // Trust Wallet detection
-            if (typeof window.ethereum !== 'undefined' && window.ethereum.isTrust) {
-                wallets.push('trust');
+            // Check for Ethereum providers
+            if (typeof window.ethereum !== 'undefined') {
+                wallets.push('ethereum');
+                
+                // Check specific wallets
+                if (window.ethereum.isTrust) {
+                    wallets.push('trust');
+                }
+                if (window.ethereum.isMetaMask) {
+                    wallets.push('metamask');
+                }
+                if (window.ethereum.isCoinbaseWallet) {
+                    wallets.push('coinbase');
+                }
             }
             
-            // MetaMask Mobile detection
-            if (typeof window.ethereum !== 'undefined' && (window.ethereum.isMetaMask || navigator.userAgent.includes('MetaMask'))) {
-                wallets.push('metamask');
+            // Check for Solana wallets
+            if (typeof window.solana !== 'undefined' && window.solana.isPhantom) {
+                wallets.push('phantom');
             }
-            
-            // Phantom Mobile detection
-            if (typeof window.phantom !== 'undefined' || typeof window.solana !== 'undefined') {
+            if (typeof window.phantom !== 'undefined') {
                 wallets.push('phantom');
             }
             
-            // Generic Ethereum provider
-            if (typeof window.ethereum !== 'undefined') {
-                wallets.push('generic');
+            // Check for Brave wallet
+            if (typeof window.ethereum !== 'undefined' && window.ethereum.isBraveWallet) {
+                wallets.push('brave');
             }
             
             console.log('Detected wallets:', wallets);
             return wallets;
         }
 
-        // Connect to any Ethereum wallet
+        // Connect to any Ethereum wallet - IMPROVED
         async function connectEthereumWallet(walletName) {
             try {
                 updateStatus(`Connecting to ${walletName}...`, 'info');
                 
                 if (typeof window.ethereum === 'undefined') {
-                    // Open deep link for mobile
+                    updateStatus(`${walletName} not detected. Opening app...`, 'info');
                     openWalletDeepLink(walletName);
-                    updateStatus(`Please open in ${walletName} app`, 'info');
                     return;
                 }
 
@@ -259,7 +309,24 @@
                 isConnected = true;
                 
                 showWalletInfo(userAddress);
-                updateStatus(`${walletName} connected successfully!`, 'success');
+                updateStatus(`✅ ${walletName} connected successfully!`, 'success');
+                
+                // Listen for account changes
+                window.ethereum.on('accountsChanged', (newAccounts) => {
+                    if (newAccounts.length === 0) {
+                        // User disconnected
+                        userAddress = null;
+                        isConnected = false;
+                        walletInfo.style.display = 'none';
+                        swapBtn.disabled = true;
+                        updateStatus('Wallet disconnected', 'error');
+                    } else {
+                        // Account changed
+                        userAddress = newAccounts[0];
+                        showWalletInfo(userAddress);
+                        updateStatus('Account changed', 'info');
+                    }
+                });
                 
             } catch (error) {
                 console.error('Connection error:', error);
@@ -273,7 +340,7 @@
             }
         }
 
-        // Connect to Phantom
+        // Connect to Phantom - IMPROVED
         async function connectPhantom() {
             try {
                 updateStatus('Connecting to Phantom...', 'info');
@@ -281,17 +348,23 @@
                 const solana = window.solana || window.phantom;
                 
                 if (!solana) {
+                    updateStatus('Phantom not detected. Opening app...', 'info');
                     openWalletDeepLink('phantom');
-                    updateStatus('Please open in Phantom app', 'info');
                     return;
                 }
 
-                const response = await solana.connect();
-                userAddress = response.publicKey.toString();
+                // Only connect if not already connected
+                if (!solana.isConnected) {
+                    const response = await solana.connect();
+                    userAddress = response.publicKey.toString();
+                } else {
+                    userAddress = solana.publicKey.toString();
+                }
+                
                 isConnected = true;
                 
                 showWalletInfo(userAddress);
-                updateStatus('Phantom connected successfully!', 'success');
+                updateStatus('✅ Phantom connected successfully!', 'success');
                 
             } catch (error) {
                 console.error('Phantom error:', error);
@@ -308,34 +381,35 @@
             swapBtn.disabled = false;
         }
 
-        // Open wallet deep links
+        // Open wallet deep links - IMPROVED
         function openWalletDeepLink(walletName) {
             const currentUrl = encodeURIComponent(window.location.href);
             let deepLink = '';
             
-            switch(walletName) {
+            switch(walletName.toLowerCase()) {
+                case 'trust wallet':
                 case 'trust':
                     deepLink = `https://link.trustwallet.com/open_url?coin=60&url=${currentUrl}`;
                     break;
                 case 'metamask':
+                case 'metamask mobile':
                     deepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
                     break;
                 case 'phantom':
-                    deepLink = `https://phantom.app/ul/browse/${btoa(window.location.href)}`;
+                    deepLink = `https://phantom.app/ul/browse/${currentUrl}`;
                     break;
+                case 'wallet':
                 default:
                     deepLink = window.location.href;
             }
             
-            console.log(`Opening deep link: ${deepLink}`);
+            console.log(`Opening deep link for ${walletName}: ${deepLink}`);
             
             // Try to open deep link
             window.location.href = deepLink;
             
-            // Fallback - open in new tab after delay
-            setTimeout(() => {
-                window.open(deepLink, '_blank');
-            }, 500);
+            // Fallback instructions
+            updateStatus(`Please open this URL in your ${walletName} app`, 'info');
         }
 
         // Execute swap
@@ -386,7 +460,7 @@
         metamaskBtn.addEventListener('click', () => connectEthereumWallet('MetaMask'));
         phantomBtn.addEventListener('click', connectPhantom);
         walletconnectBtn.addEventListener('click', () => {
-            updateStatus('WalletConnect coming soon...', 'info');
+            updateStatus('WalletConnect integration coming soon...', 'info');
         });
         genericBtn.addEventListener('click', () => connectEthereumWallet('Wallet'));
         
@@ -398,7 +472,7 @@
             }
         });
 
-        // Check existing connection
+        // Check existing connection - IMPROVED
         async function checkExistingConnection() {
             try {
                 // Check Ethereum
@@ -408,7 +482,7 @@
                         userAddress = accounts[0];
                         isConnected = true;
                         showWalletInfo(userAddress);
-                        updateStatus('Wallet reconnected', 'success');
+                        updateStatus('✅ Wallet reconnected', 'success');
                     }
                 }
                 
@@ -418,22 +492,34 @@
                     userAddress = solana.publicKey.toString();
                     isConnected = true;
                     showWalletInfo(userAddress);
-                    updateStatus('Phantom reconnected', 'success');
+                    updateStatus('✅ Phantom reconnected', 'success');
                 }
                 
             } catch (error) {
-                console.log('No existing connection');
+                console.log('No existing connection:', error.message);
             }
         }
 
-        // Auto-detect wallets on load
+        // Auto-detect wallets on load - IMPROVED
         function autoDetectWallets() {
             const detectedWallets = detectMobileWallet();
             
             if (detectedWallets.length === 0) {
-                updateStatus('No wallets detected. Use buttons above.', 'info');
+                updateStatus('🌐 Open this page in your mobile wallet app for best experience', 'info');
             } else {
-                updateStatus(`Detected: ${detectedWallets.join(', ')}`, 'success');
+                updateStatus(`✅ Detected: ${detectedWallets.join(', ')}`, 'success');
+            }
+        }
+
+        // Generate QR Code
+        function generateQRCode() {
+            if (typeof QRCode !== 'undefined') {
+                const qrElement = document.getElementById('qrcode');
+                qrElement.innerHTML = ''; // Clear previous QR
+                QRCode.toCanvas(qrElement, window.location.href, { width: 200 }, function(error) {
+                    if (error) console.error('QR Code error:', error);
+                });
+                document.getElementById('qrCode').style.display = 'block';
             }
         }
 
@@ -442,6 +528,14 @@
             console.log('✅ Mobile DApp loaded');
             checkExistingConnection();
             autoDetectWallets();
+            generateQRCode();
+            
+            // Show helpful message based on device
+            if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                updateStatus('📱 Mobile device detected. You can use wallet buttons!', 'success');
+            } else {
+                updateStatus('💻 Desktop detected. Copy URL to mobile wallet for best experience.', 'info');
+            }
         });
 
         // Add touch improvements for mobile
