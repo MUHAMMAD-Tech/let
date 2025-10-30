@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trust Wallet - Simple v1</title>
+    <title>Trust Wallet - Deep Link</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -22,127 +22,91 @@
             background: #337CCF;
             color: white;
         }
-        #status { 
-            margin: 20px; 
-            padding: 15px; 
+        .url-box {
+            background: #2d2d2d;
+            padding: 15px;
             border-radius: 8px;
-            background: #333;
+            margin: 20px 0;
+            word-break: break-all;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <h2>🔗 Trust Wallet Connect (Simple v1)</h2>
-    <button id="connectBtn" class="btn">Connect Wallet</button>
-    <div id="qrcode"></div>
-    <div id="status">Click connect to start</div>
-
-    <!-- WalletConnect v1 - More reliable -->
-    <script src="https://unpkg.com/@walletconnect/client@1.8.0/dist/umd/index.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <h2>🔗 Trust Wallet Deep Link</h2>
+    
+    <button class="btn" onclick="openTrustWallet()">Open in Trust Wallet</button>
+    <button class="btn" onclick="openMetaMask()">Open in MetaMask</button>
+    <button class="btn" onclick="copyUrl()">📋 Copy URL</button>
+    
+    <div class="url-box">
+        <strong>Current URL:</strong><br>
+        <span id="currentUrl"></span>
+    </div>
+    
+    <div id="status">Click a button above</div>
 
     <script>
-        let connector = null;
+        // Display current URL
+        document.getElementById('currentUrl').textContent = window.location.href;
 
         function updateStatus(message) {
             document.getElementById('status').textContent = message;
-            console.log(message);
         }
 
-        async function connectWallet() {
-            try {
-                updateStatus('🔄 Creating connection...');
-                
-                // Create WalletConnect v1 connector
-                connector = new WalletConnect({
-                    bridge: "https://bridge.walletconnect.org", // Official bridge
-                    qrcodeModal: false
-                });
-
-                // Check if connection is already established
-                if (!connector.connected) {
-                    // Create new session
-                    updateStatus('📱 Generating QR code...');
-                    await connector.createSession();
-
-                    // Display QR Code
-                    showQRCode(connector.uri);
-                }
-
-                // Subscribe to connection events
-                connector.on("connect", (error, payload) => {
-                    if (error) {
-                        throw error;
-                    }
-
-                    // Get connected account
-                    const { accounts } = payload.params[0];
-                    updateStatus(`✅ Connected: ${accounts[0].substring(0, 10)}...`);
-                    document.getElementById('connectBtn').textContent = '✅ Connected';
-                    document.getElementById('connectBtn').disabled = true;
-                    document.getElementById('qrcode').innerHTML = '';
-                });
-
-                connector.on("session_update", (error, payload) => {
-                    if (error) {
-                        throw error;
-                    }
-                    const { accounts } = payload.params[0];
-                    updateStatus(`🔄 Session updated: ${accounts[0].substring(0, 10)}...`);
-                });
-
-                connector.on("disconnect", (error, payload) => {
-                    if (error) {
-                        throw error;
-                    }
-                    updateStatus('🔌 Disconnected');
-                    document.getElementById('connectBtn').textContent = 'Connect Wallet';
-                    document.getElementById('connectBtn').disabled = false;
-                });
-
-            } catch (error) {
-                console.error('Connection error:', error);
-                updateStatus(`❌ Error: ${error.message}`);
-            }
+        function openTrustWallet() {
+            const currentUrl = encodeURIComponent(window.location.href);
+            const trustLink = `https://link.trustwallet.com/open_url?coin=60&url=${currentUrl}`;
+            
+            updateStatus('🔄 Opening Trust Wallet...');
+            
+            // Try to open deep link
+            window.location.href = trustLink;
+            
+            // Fallback after delay
+            setTimeout(() => {
+                window.open(trustLink, '_blank');
+                updateStatus('⚠️ If Trust Wallet didn\'t open, copy the URL above and paste in Trust Wallet browser');
+            }, 500);
         }
 
-        function showQRCode(uri) {
-            const qrElement = document.getElementById('qrcode');
-            qrElement.innerHTML = '';
-            QRCode.toCanvas(qrElement, uri, { width: 200 }, (err) => {
-                if (err) {
-                    console.error('QR error:', err);
-                    updateStatus('❌ QR code failed');
-                } else {
-                    updateStatus('📱 Scan QR code with Trust Wallet');
-                console.log('QR Code URI:', uri);
-                // Also log URI for manual copy-paste
-                    updateStatus(`📱 Scan QR or copy this in Trust Wallet: ${uri.substring(0, 50)}...`);
-                }
+        function openMetaMask() {
+            const metamaskLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+            
+            updateStatus('🔄 Opening MetaMask...');
+            window.location.href = metamaskLink;
+            
+            setTimeout(() => {
+                window.open(metamaskLink, '_blank');
+            }, 500);
+        }
+
+        function copyUrl() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                updateStatus('✅ URL copied! Paste this in your wallet browser');
+            }).catch(() => {
+                updateStatus('❌ Copy failed. Please copy the URL manually');
             });
         }
 
-        document.getElementById('connectBtn').addEventListener('click', connectWallet);
-
-        // Check for existing connection on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Try to initialize with existing connection
-            try {
-                const existingConnector = new WalletConnect({
-                    bridge: "https://bridge.walletconnect.org",
-                    qrcodeModal: false
-                });
-
-                if (existingConnector.connected) {
-                    const accounts = existingConnector.accounts;
-                    updateStatus(`✅ Reconnected: ${accounts[0].substring(0, 10)}...`);
-                    document.getElementById('connectBtn').textContent = '✅ Connected';
-                    document.getElementById('connectBtn').disabled = true;
-                    connector = existingConnector;
+        // Auto-detect if we're in a wallet
+        if (typeof window.ethereum !== 'undefined') {
+            updateStatus('✅ Wallet detected! Ready to connect.');
+            
+            // Auto-connect if in wallet
+            setTimeout(async () => {
+                try {
+                    const accounts = await window.ethereum.request({
+                        method: 'eth_requestAccounts'
+                    });
+                    if (accounts.length > 0) {
+                        updateStatus(`✅ Connected: ${accounts[0].substring(0, 10)}...`);
+                    }
+                } catch (error) {
+                    console.log('Auto-connect failed:', error);
                 }
-            } catch (error) {
-                console.log('No existing connection');
-            }
-        });
+            }, 1000);
+        }
     </script>
 </body>
 </html>
