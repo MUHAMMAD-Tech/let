@@ -1,4 +1,4 @@
-// mobile-wallets.js - Mobil qurilmalar uchun optimallashtirilgan wallet connection
+// mobile-wallets.js - Mobil walletlar uchun alohida fayl
 
 class MobileWalletConnector {
     constructor() {
@@ -55,10 +55,8 @@ class MobileWalletConnector {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }
 
-    // Mobil walletlarni tekshirish
     checkMetaMask() {
         if (this.isMobile) {
-            // Mobil brauzerda MetaMask ni tekshirish
             return typeof window.ethereum !== 'undefined' && 
                    (window.ethereum.isMetaMask || 
                     navigator.userAgent.includes('MetaMask'));
@@ -231,18 +229,14 @@ class MobileWalletConnector {
 
     openWalletDeepLink(url) {
         console.log('🔗 Opening deep link:', url);
-        
-        // Yangi oynada ochish
         window.open(url, '_blank');
         
-        // Fallback: agar yangi oyna ochilmasa
         setTimeout(() => {
             window.location.href = url;
         }, 500);
     }
 
     openDeepLink() {
-        // Eng ko'p ishlatiladigan wallet uchun deep link
         const defaultWallet = this.detectedWallets[0] || this.supportedWallets.metamask;
         if (defaultWallet && defaultWallet.mobileUrl) {
             this.openWalletDeepLink(defaultWallet.mobileUrl);
@@ -250,7 +244,6 @@ class MobileWalletConnector {
     }
 
     setupDeepLinks() {
-        // URL parametrlari orqali wallet connection
         const urlParams = new URLSearchParams(window.location.search);
         const walletParam = urlParams.get('wallet');
         
@@ -259,10 +252,8 @@ class MobileWalletConnector {
         }
     }
 
-    // MetaMask connection (mobil uchun optimallashtirilgan)
     async connectMetaMask() {
         try {
-            // Mobil brauzerda ethereum object ni kutish
             if (this.isMobile) {
                 return await this.waitForEthereum('metamask');
             }
@@ -286,7 +277,6 @@ class MobileWalletConnector {
         }
     }
 
-    // Trust Wallet connection
     async connectTrustWallet() {
         try {
             if (this.isMobile) {
@@ -312,7 +302,6 @@ class MobileWalletConnector {
         }
     }
 
-    // Phantom connection
     async connectPhantom() {
         try {
             if (this.isMobile) {
@@ -338,7 +327,6 @@ class MobileWalletConnector {
         }
     }
 
-    // Binance Wallet connection
     async connectBinanceWallet() {
         try {
             if (typeof window.BinanceChain === 'undefined') {
@@ -366,14 +354,11 @@ class MobileWalletConnector {
         }
     }
 
-    // WalletConnect
     async connectWalletConnect() {
-        // Mobil uchun WalletConnect - keyinroq implement qilamiz
         updateStatus('WalletConnect coming soon for mobile...', 'info');
         return false;
     }
 
-    // Ethereum object ni kutish (mobil uchun)
     async waitForEthereum(walletName, timeout = 10000) {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
@@ -398,7 +383,6 @@ class MobileWalletConnector {
         });
     }
 
-    // Solana object ni kutish
     async waitForSolana(timeout = 10000) {
         return new Promise((resolve, reject) => {
             const startTime = Date.now();
@@ -424,7 +408,6 @@ class MobileWalletConnector {
         });
     }
 
-    // Ethereum connection ni boshqarish
     async handleEthereumConnection(address = null) {
         if (!address) {
             const accounts = await window.ethereum.request({
@@ -439,7 +422,6 @@ class MobileWalletConnector {
         const network = await provider.getNetwork();
         currentChainId = network.chainId;
 
-        // Event listeners
         window.ethereum.on('accountsChanged', (accounts) => {
             if (accounts.length === 0) {
                 this.handleDisconnect();
@@ -474,313 +456,29 @@ class MobileWalletConnector {
         
         updateStatus('Wallet disconnected', 'info');
     }
-
-    // QR code generator (WalletConnect uchun)
-    generateQRCode(text) {
-        // Soddalashtirilgan QR code generator
-        const qrContainer = document.createElement('div');
-        qrContainer.className = 'qr-code-container';
-        qrContainer.innerHTML = `
-            <div class="qr-code">
-                <p>Scan with WalletConnect</p>
-                <div class="qr-placeholder">QR Code: ${text.substring(0, 20)}...</div>
-            </div>
-        `;
-        return qrContainer;
-    }
 }
 
 // Global mobile wallet connector
 let mobileWalletConnector;
 
-// Yangi init funksiyasi
-async function initMobileSwap() {
-    console.log("📱 Mobile Swap initializing...");
-    
-    // Mobile wallet connector ni ishga tushirish
+// Mobile init funksiyasi
+function initMobileWallets() {
+    console.log("📱 Initializing mobile wallets...");
     mobileWalletConnector = new MobileWalletConnector();
-    
-    // DOM elementlarni topish
-    fromTokenSelect = document.getElementById('fromTokenSelect');
-    toTokenSelect = document.getElementById('toTokenSelect');
-    swapAmount = document.getElementById('swapAmount');
-    connectWalletBtn = document.getElementById('connectWalletBtn');
-    swapBtn = document.getElementById('swapBtn');
-    walletAddress = document.getElementById('walletAddress');
-    swapStatus = document.getElementById('swapStatus');
-
-    // Event listenerlarni o'rnatish
-    setupMobileEventListeners();
-    
-    // Avvalgi connection ni tekshirish
-    checkMobileConnection();
-    
-    console.log("✅ Mobile Swap initialized");
 }
 
+// Mobile event listenerlari
 function setupMobileEventListeners() {
     if (connectWalletBtn) {
         connectWalletBtn.addEventListener('click', () => {
-            if (mobileWalletConnector.isMobile) {
+            if (mobileWalletConnector && mobileWalletConnector.isMobile) {
                 mobileWalletConnector.showMobileModal();
             } else {
-                // Desktop uchun eski modal
+                // Desktop uchun boshqa modal
                 if (typeof walletConnector !== 'undefined') {
                     walletConnector.showWalletModal();
                 }
             }
         });
     }
-    
-    // Qolgan event listenerlar
-    if (swapBtn) swapBtn.addEventListener('click', executeRealSwap);
-    if (fromTokenSelect) fromTokenSelect.addEventListener('change', updateFeeDisplay);
-    if (toTokenSelect) toTokenSelect.addEventListener('change', updateFeeDisplay);
-    if (swapAmount) swapAmount.addEventListener('input', updateFeeDisplay);
 }
-
-function checkMobileConnection() {
-    // LocalStorage dan connection ni tekshirish
-    const saved = localStorage.getItem('mobileWalletConnection');
-    if (saved) {
-        const connection = JSON.parse(saved);
-        userAddress = connection.address;
-        currentChainId = connection.chainId;
-        updateUI();
-    }
-}
-
-// Mobile uchun CSS
-const mobileWalletStyles = `
-/* Mobile Wallet Modal */
-.mobile-wallet-modal {
-    position: fixed;
-    z-index: 10000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(15, 15, 20, 0.95);
-    backdrop-filter: blur(20px);
-}
-
-.mobile-wallet-content {
-    background: rgba(25, 25, 35, 0.98);
-    margin: 10% auto;
-    padding: 0;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 400px;
-    border: 1px solid rgba(129, 103, 169, 0.3);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-}
-
-body.light .mobile-wallet-content {
-    background: rgba(255, 255, 255, 0.98);
-}
-
-.mobile-wallet-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid rgba(129, 103, 169, 0.2);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.mobile-wallet-header h3 {
-    margin: 0;
-    color: #fff;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-}
-
-body.light .mobile-wallet-header h3 {
-    color: #1f2029;
-}
-
-.mobile-wallet-close {
-    color: #8167a9;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.mobile-wallet-close:hover {
-    color: #a68ccd;
-}
-
-.mobile-wallet-body {
-    padding: 1.5rem;
-}
-
-.mobile-wallet-instructions {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: #c4c3ca;
-}
-
-body.light .mobile-wallet-instructions {
-    color: #666;
-}
-
-/* Mobile Wallet List */
-.mobile-wallet-list {
-    margin-bottom: 2rem;
-}
-
-.mobile-wallet-item {
-    display: flex;
-    align-items: center;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-
-body.light .mobile-wallet-item {
-    background: rgba(0, 0, 0, 0.03);
-}
-
-.mobile-wallet-item:hover {
-    background: rgba(129, 103, 169, 0.15);
-    border-color: rgba(129, 103, 169, 0.5);
-    transform: translateY(-3px);
-}
-
-.mobile-wallet-icon {
-    font-size: 2rem;
-    margin-right: 1rem;
-    width: 50px;
-    text-align: center;
-}
-
-.mobile-wallet-info {
-    flex: 1;
-}
-
-.mobile-wallet-name {
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 0.5rem;
-    font-size: 1.1rem;
-    font-family: 'Montserrat', sans-serif;
-}
-
-body.light .mobile-wallet-name {
-    color: #1f2029;
-}
-
-.mobile-wallet-status {
-    font-size: 0.9rem;
-    color: #4CAF50;
-    font-weight: 600;
-}
-
-/* Deep Link Button */
-.mobile-wallet-deeplink {
-    border-top: 1px solid rgba(129, 103, 169, 0.2);
-    padding-top: 1.5rem;
-    text-align: center;
-}
-
-.mobile-wallet-deeplink p {
-    margin-bottom: 1rem;
-    color: #c4c3ca;
-    font-size: 0.9rem;
-}
-
-body.light .mobile-wallet-deeplink p {
-    color: #666;
-}
-
-.deeplink-btn {
-    background: linear-gradient(135deg, #8153a9, #a68ccd);
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-    font-family: 'Montserrat', sans-serif;
-}
-
-.deeplink-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(129, 103, 169, 0.4);
-}
-
-/* QR Code */
-.qr-code-container {
-    text-align: center;
-    padding: 1rem;
-}
-
-.qr-code {
-    background: white;
-    padding: 1rem;
-    border-radius: 12px;
-    display: inline-block;
-}
-
-.qr-placeholder {
-    background: #f0f0f0;
-    padding: 2rem;
-    border-radius: 8px;
-    margin-top: 1rem;
-    color: #333;
-    font-family: monospace;
-}
-
-/* Mobile Responsive */
-@media (max-width: 480px) {
-    .mobile-wallet-content {
-        margin: 5% auto;
-        width: 95%;
-    }
-    
-    .mobile-wallet-item {
-        padding: 1rem;
-    }
-    
-    .mobile-wallet-icon {
-        font-size: 1.75rem;
-        margin-right: 0.75rem;
-    }
-    
-    .mobile-wallet-name {
-        font-size: 1rem;
-    }
-}
-
-/* Touch improvements */
-@media (hover: none) and (pointer: coarse) {
-    .mobile-wallet-item {
-        min-height: 60px;
-    }
-    
-    .deeplink-btn {
-        min-height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-}
-`;
-
-// CSS ni qo'shish
-const mobileStyleSheet = document.createElement('style');
-mobileStyleSheet.textContent = mobileWalletStyles;
-document.head.appendChild(mobileStyleSheet);
-
-// DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("📱 Mobile DOM ready");
-    setTimeout(initMobileSwap, 500);
-});
