@@ -1,0 +1,130 @@
+/* real-swap.css - Real mode uchun qo'shimcha styling */
+
+.wallet-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-wallet {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-wallet.metamask {
+    background: linear-gradient(135deg, #f6851b, #e2761b);
+    color: white;
+}
+
+.btn-wallet.phantom {
+    background: linear-gradient(135deg, #ab9ff2, #7b61ff);
+    color: white;
+}
+
+.btn-wallet.trust {
+    background: linear-gradient(135deg, #3375bb, #2a5f9e);
+    color: white;
+}
+
+.btn-wallet:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.wallet-icon {
+    font-size: 1.2rem;
+}
+
+.balance-info {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px 0;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.transaction-details {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.transaction-details h4 {
+    margin-bottom: 15px;
+    color: #8153a9;
+    text-align: center;
+}
+
+.tx-info, .fee-info, .quote-info {
+    margin: 10px 0;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+.network-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(129, 83, 169, 0.2);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-left: 10px;
+}
+
+.network-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Real mode specific */
+.real-mode-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #4CAF50;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .wallet-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-wallet {
+        width: 100%;
+    }
+}
