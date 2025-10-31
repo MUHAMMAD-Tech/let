@@ -37,7 +37,7 @@ function initApp() {
 
       // Circle movement
       if (circle) {
-        circle.style.transform = isLight ? "translateX(24px)" : "translateX(0)";
+        circle.style.transform = isLight ? "translateX(50px)" : "translateX(0)";
         circle.style.transition = "transform 0.3s ease";
         console.log("Circle moved:", isLight ? "right" : "left");
       }
