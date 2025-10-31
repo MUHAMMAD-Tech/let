@@ -45,7 +45,7 @@ function initApp() {
       // Logo color change
       if (logo) {
         logo.style.color = isLight ? "#000" : "#fff";
-        logo.style.transition = "color 0.3s ease";
+        logo.style.transition = "color 0.1s";
         console.log("Logo color changed:", isLight ? "black" : "white");
       }
     });
