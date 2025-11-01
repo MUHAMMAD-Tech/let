@@ -1,45 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Connect Wallet Example</title>
+  <meta charset="UTF-8">
+  <title>Reown Wallet Connect Example</title>
 </head>
 <body>
-  <button id="connectWalletBtn" style="padding:10px 20px; background:#4A90E2; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+  <button id="connectWalletBtn" style="padding:10px 20px; background:#4A90E2; color:#fff; border:none; border-radius:6px; cursor:pointer;">
     Connect Wallet
   </button>
 
   <script type="module">
-    import { createAppKit } from 'https://cdn.jsdelivr.net/npm/@reown/appkit@latest/dist/index.esm.js';
-    import { EthersAdapter } from 'https://cdn.jsdelivr.net/npm/@reown/appkit-adapter-ethers@latest/dist/index.esm.js';
-    import { mainnet } from 'https://cdn.jsdelivr.net/npm/@reown/appkit/networks@latest/dist/index.esm.js';
+    // 🔹 ESM modullarni to‘g‘ri versiyadan chaqiramiz
+    import { createAppKit } from "https://unpkg.com/@reown/appkit@1.2.3/dist/index.js";
+    import { EthersAdapter } from "https://unpkg.com/@reown/appkit-adapter-ethers@1.2.3/dist/index.js";
+    import { mainnet } from "https://unpkg.com/@reown/appkit/networks@1.2.3/dist/index.js";
 
-    const projectId = 'f76f0bcabf40fadb066240a1c96eff76'; // Infura yoki Reown loyihangiz ID
+    // 🔹 Loyihangiz uchun projectId (Infura yoki WalletConnect dan olingan)
+    const projectId = "f76f0bcabf40fadb066240a1c96eff76";
 
+    // 🔹 Metadata (dApp haqida ma’lumot)
     const metadata = {
-      name: 'My Web3 Site',
-      description: 'Example using Reown AppKit',
+      name: "My Web3 Site",
+      description: "Wallet connect via Reown AppKit",
       url: window.location.origin,
-      icons: [ `${window.location.origin}/icon.png` ] // optional icon
+      icons: [ `${window.location.origin}/icon.png` ]
     };
 
-    const appKit = createAppKit({
-      adapters: [ new EthersAdapter() ],
-      networks: [ mainnet ],
+    // 🔹 AppKit yaratamiz
+    const appKit = await createAppKit({
+      adapters: [new EthersAdapter()],
       projectId,
       metadata,
-      features: { analytics: true }
+      networks: [mainnet],
+      features: {
+        analytics: true
+      }
     });
 
-    document.getElementById('connectWalletBtn')
-      .addEventListener('click', async () => {
-        try {
-          await appKit.openModal(); // ✅ to‘g‘ri metod
-          console.log('Wallet connect modal opened');
-        } catch (err) {
-          console.error('Wallet connect error:', err);
-        }
-      });
+    // 🔹 Tugmani bosganda wallet modalni ochamiz
+    document.getElementById("connectWalletBtn").addEventListener("click", async () => {
+      try {
+        await appKit.openModal();
+        console.log("Wallet modal opened ✅");
+      } catch (err) {
+        console.error("❌ Wallet connect error:", err);
+      }
+    });
   </script>
 </body>
 </html>
