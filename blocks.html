@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Connect Wallet Example</title>
 </head>
 <body>
@@ -10,33 +10,36 @@
   </button>
 
   <script type="module">
-    import { createAppKit } from 'https://cdn.jsdelivr.net/npm/@reown/appkit/dist/index.esm.js';
-    import { EthersAdapter } from 'https://cdn.jsdelivr.net/npm/@reown/appkit-adapter-ethers/dist/index.esm.js';
-    import { mainnet } from 'https://cdn.jsdelivr.net/npm/@reown/appkit/networks/dist/index.esm.js';
+    import { createAppKit } from 'https://cdn.jsdelivr.net/npm/@reown/appkit@latest/dist/index.esm.js';
+    import { EthersAdapter } from 'https://cdn.jsdelivr.net/npm/@reown/appkit-adapter-ethers@latest/dist/index.esm.js';
+    import { mainnet } from 'https://cdn.jsdelivr.net/npm/@reown/appkit/networks@latest/dist/index.esm.js';
 
-    const projectId = 'f76f0bcabf40fadb066240a1c96eff76';  // bu sizning loyihangizga berilgan ID
+    const projectId = 'f76f0bcabf40fadb066240a1c96eff76'; // Infura yoki Reown loyihangiz ID
 
     const metadata = {
-      name: 'Lethel',
+      name: 'My Web3 Site',
       description: 'Example using Reown AppKit',
       url: window.location.origin,
-      icons: [ ${window.location.origin}/icon.png ]  // agar icon bo‘lsa
+      icons: [ `${window.location.origin}/icon.png` ] // optional icon
     };
 
-    const modal = createAppKit({
+    const appKit = createAppKit({
       adapters: [ new EthersAdapter() ],
       networks: [ mainnet ],
       projectId,
       metadata,
-      features: {
-        analytics: true
-      }
+      features: { analytics: true }
     });
 
     document.getElementById('connectWalletBtn')
       .addEventListener('click', async () => {
-        await modal.open();
-        console.log('Wallet connect modal opened');
+        try {
+          await appKit.openModal(); // ✅ to‘g‘ri metod
+          console.log('Wallet connect modal opened');
+        } catch (err) {
+          console.error('Wallet connect error:', err);
+        }
       });
   </script>
 </body>
+</html>
