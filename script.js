@@ -97,6 +97,84 @@ setTimeout(function () {
 
 
 
+const LethexUI = (() => {
+  // ✅ Qurilma mobil ekanligini aniqlash
+ function adjustMobileModal() {
+  const modal = document.querySelector(".modal-content");
+  if (!modal) return;
+
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+
+  if (isMobile) {
+    // 📱 Mobil uchun
+    modal.style.position = "relative";
+    modal.style.top = "50%";
+  } else {
+    // 💻 Desktop uchun normal holatga qaytaramiz
+    modal.style.position = "relative";
+    modal.style.top = "30%";
+    modal.style.transform = "translateY(-50%)";
+  }
+}
+
+  // ✅ Modal oynani ochish
+  function openModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "block";
+  }
+
+  // ✅ Modal oynani yopish
+  function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  }
+
+  // ✅ Token tanlov dropdown boshqaruvi
+  function setupDropdowns() {
+    document.querySelectorAll(".token-select").forEach((sel) => {
+      sel.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const list = sel.querySelector(".token-dropdown");
+        if (!list) return;
+        // boshqa ochiq dropdownlarni yopish
+        document.querySelectorAll(".token-dropdown").forEach((l) => {
+          if (l !== list) l.classList.remove("show");
+        });
+        list.classList.toggle("show");
+      });
+    });
+
+    // Tashqariga bosilganda dropdownni yopish
+    window.addEventListener("click", (e) => {
+      if (!e.target.closest(".token-select")) {
+        document
+          .querySelectorAll(".token-dropdown")
+          .forEach((l) => l.classList.remove("show"));
+      }
+    });
+  }
+
+  // 🔹 Hammasini qaytaramiz
+  return { adjustMobileModal, openModal, closeModal, setupDropdowns };
+})();
+
+// ✅ Global holatga qo‘shamiz (React yoki module ichida ham ishlaydi)
+window.LethexUI = LethexUI;
+
+// ✅ Sahifa yuklanganda ishga tushadi (faqat oddiy HTML loyihalarda)
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    LethexUI.adjustMobileModal();
+    LethexUI.setupDropdowns();
+  });
+} else {
+  // Agar sahifa allaqachon yuklangan bo‘lsa
+  LethexUI.adjustMobileModal();
+  LethexUI.setupDropdowns();
+}
+
 
 
 
