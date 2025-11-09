@@ -94,3 +94,79 @@ setTimeout(function () {
     });
   }
 }, 3000);
+
+
+
+
+
+
+
+<!-- === Connect tugmasi === -->
+<button id="connectWalletBtn" style="padding:10px 20px;border-radius:8px;">
+  <span id="Connected">Connect Wallet</span>
+</button>
+
+<!-- === Modal (avval yashirin holatda) === -->
+<div id="connectModal" 
+     style="display:none;
+            position:fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background-color:rgba(0,0,0,0.5);
+            justify-content:center;
+            align-items:center;
+            z-index:9999;">
+
+  <div style="background:#fff;
+              padding:20px;
+              border-radius:12px;
+              text-align:center;
+              min-width:250px;">
+    <p>Walletni ulang</p>
+    <button id="cancelConnectBtn" 
+            style="margin-top:10px;padding:6px 14px;border-radius:8px;">
+      Cancel
+    </button>
+  </div>
+</div>
+
+<script>
+// Elementlarni olish
+const connectWalletBtn = document.getElementById("connectWalletBtn");
+const connectModal = document.getElementById("connectModal");
+const cancelConnectBtn = document.getElementById("cancelConnectBtn");
+const connectSpan = document.getElementById("Connected");
+
+// Wallet holati
+let isWalletConnected = false;
+
+// Tugmani bosganda modalni ochish
+connectWalletBtn.addEventListener("click", () => {
+  connectModal.style.display = "flex"; // sahifani to‘smasdan markazda ko‘rsatadi
+
+  // Wallet holatiga qarab matnni yangilash
+  if (isWalletConnected) {
+    connectSpan.textContent = "Connected ✅";
+  } else {
+    connectSpan.textContent = "Connect Wallet";
+  }
+});
+
+// Cancel tugmasini bosganda modalni yopish
+cancelConnectBtn.addEventListener("click", () => {
+  connectModal.style.display = "none";
+});
+
+// Walletni tekshirish (demo uchun)
+function checkWalletConnection() {
+  // Bu yerda haqiqiy wallet logikasi bo‘ladi (hozircha random demo)
+  const connected = Math.random() > 0.5;
+  isWalletConnected = connected;
+  connectSpan.textContent = connected ? "Connected ✅" : "Connect Wallet";
+}
+
+// Sahifa yuklanganda tekshirish
+document.addEventListener("DOMContentLoaded", checkWalletConnection);
+</script>
