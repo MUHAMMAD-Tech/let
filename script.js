@@ -99,6 +99,63 @@ setTimeout(function () {
 
 
 
+// ui-controller.js — Lethex UI boshqaruv funksiyalari
+
+const LethexUI = (() => {
+    // Qurilma mobilmi?
+    function adjustMobileModal() {
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+        );
+        if (isMobile) {
+            const modal = document.querySelector(".modal-content");
+            if (modal) {
+                modal.style.position = "relative";
+                modal.style.top = "25%";
+            }
+        }
+    }
+    
+    // Modal ochish/yopish
+    function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "block";
+    }
+    
+    function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+    }
+    
+    // Token tanlov dropdown boshqaruvi
+    function setupDropdowns() {
+        document.querySelectorAll(".token-select").forEach(sel => {
+            sel.addEventListener("click", e => {
+                e.stopPropagation();
+                const list = sel.querySelector(".token-dropdown");
+                document.querySelectorAll(".token-dropdown").forEach(l => {
+                    if (l !== list) l.classList.remove("show");
+                });
+                list.classList.toggle("show");
+            });
+        });
+        window.addEventListener("click", e => {
+            if (!e.target.closest(".token-select"))
+                document.querySelectorAll(".token-dropdown").forEach(l => l.classList.remove("show"));
+        });
+    }
+    
+    return { adjustMobileModal, openModal, closeModal, setupDropdowns };
+})();
+
+// Sahifa yuklanganda UI ishga tushadi
+document.addEventListener("DOMContentLoaded", () => {
+    LethexUI.adjustMobileModal();
+    LethexUI.setupDropdowns();
+});
+
+
+
 
 
 
